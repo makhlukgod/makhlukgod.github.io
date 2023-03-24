@@ -1,1 +1,27 @@
-2125
+<div class="pod-player" 
+     data-src="https://api.mave.digital/storage/podcasts/55106c18-dce2-4e71-b165-79263fc786a6/episodes/704be236-8867-4e01-80a1-7be2c1b4e141.mp3" 
+     data-cover="https://mavecloud.s3mts.ru/storage/podcasts/55106c18-dce2-4e71-b165-79263fc786a6/images/2da4a2f8-f4f4-478b-b2d1-5c66647ace23.png"
+     data-title="How technology can make education more human"
+     data-artist="Подкаст"></div>
+     
+     
+     <script>
+      import {Player} from "https://cdn.skypack.dev/shikwasa@2.2.0"
+
+      const podPlayer = document.querySelector('.pod-player')
+
+      const player = new Player({
+         container: () => podPlayer,
+         audio: {
+           title: podPlayer.dataset.title,
+           artist: podPlayer.dataset.artist,
+           cover: podPlayer.dataset.cover,
+           src: podPlayer.dataset.src,
+
+         },
+        themeColor: '#0083A8',
+        theme: 'light',
+        download: true
+       })
+ 
+ </script>
