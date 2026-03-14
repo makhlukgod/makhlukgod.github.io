@@ -1,0 +1,1571 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Избранные дуа Пророка ﷺ</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f9f9f9;
+            color: #222; 
+            padding: 0;
+            line-height: 1.6;
+        }
+        .dua-section {
+            max-width: 900px;
+            margin: 0 auto 30px auto;
+            background-color: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.05); 
+        }
+        .title {
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: #2c5f2d;
+            border-bottom: 2px solid #d4af37;
+            padding-bottom: 8px;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        .source {
+            font-size: 0.95rem;
+            color: #6c757d;
+            background-color: #f8f9fa;
+            padding: 10px 15px;
+            border-radius: 30px;
+            margin-bottom: 25px;
+            border-left: 4px solid #2c5f2d;
+            font-style: italic;
+        }
+        .wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            padding: 5px; 
+            direction: rtl;
+        }
+        
+        /* КАЖДЫЙ БЛОК - ширина по арабскому тексту */
+        .fragment {
+            font-size: 33px;
+            width: min-content;  /* блок сужается до минимальной ширины контента */
+            max-width: min-content; /* или так, если нужен только верхний предел */ 
+        }
+        
+        /* Арабский - запрет переноса */
+        .ar {
+  	        
+                font-family: 'Scheherazade', 'Times New Roman', serif;
+                line-height: 1.2em;
+    		white-space: nowrap;
+    		direction: rtl;
+   		text-align: center;
+    		color: #1e3c72;
+        }
+        
+        /* Русский - принудительный перенос */
+        .ru {
+            white-space: normal;
+            overflow-wrap: normal;
+            word-break: normal;
+            hyphens: none;
+		
+            max-width: 100%; 
+            font-size: 0.4em;
+            line-height: 0.9em;
+            text-align: center;   
+            display: block;
+        }
+        .trsc {
+            white-space: normal;
+            overflow-wrap: normal;
+            word-break: normal;
+            hyphens: none;
+            max-width: 100%; 
+            font-size: 0.4em;
+            line-height: 0.9em;
+            text-align: center;  
+                color: #8f8f8f; 
+            display: block;
+            font-family: 'Courier New', monospace;
+        }
+        
+    </style>
+<script>
+// Функция для создания и управления настройками текста
+function createTextSettings() {
+    // Создаем контейнер для кнопки настроек, если его нет
+    let settingsBtn = document.getElementById('textSettingsBtn');
+    if (!settingsBtn) {
+        settingsBtn = document.createElement('button');
+        settingsBtn.id = 'textSettingsBtn';
+        settingsBtn.textContent = '⚙️ Настройки текста';
+        settingsBtn.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #0b5e42;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 40px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 10000;
+            border: 2px solid #c4a747;
+            transition: 0.2s;
+        `;
+        settingsBtn.addEventListener('mouseenter', () => {
+            settingsBtn.style.backgroundColor = '#1a7a5a';
+        });
+        settingsBtn.addEventListener('mouseleave', () => {
+            settingsBtn.style.backgroundColor = '#0b5e42';
+        });
+        document.body.appendChild(settingsBtn);
+    }
+
+    // Создаем модальное окно настроек
+    let modal = document.getElementById('textSettingsModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'textSettingsModal';
+        modal.style.cssText = `
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+            z-index: 10001;
+            width: 350px;
+            max-width: 90vw;
+            border: 3px solid #c4a747;
+        `;
+        
+        // Заголовок
+        const title = document.createElement('h3');
+        title.textContent = 'Настройки отображения';
+        title.style.cssText = `
+            margin-top: 0;
+            margin-bottom: 25px;
+            color: #0b5e42;
+            border-bottom: 2px solid #c4a747;
+            padding-bottom: 10px;
+            font-size: 1.5rem;
+        `;
+        modal.appendChild(title);
+
+        // Размер арабского текста
+        const arabicLabel = document.createElement('label');
+        arabicLabel.textContent = 'Размер арабского текста:';
+        arabicLabel.style.cssText = `
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        `;
+        modal.appendChild(arabicLabel);
+
+        const arabicSlider = document.createElement('input');
+        arabicSlider.type = 'range';
+        arabicSlider.id = 'arabicSizeSlider';
+        arabicSlider.min = '16';
+        arabicSlider.max = '48';
+        arabicSlider.value = '32';
+        arabicSlider.style.cssText = `
+            width: 100%;
+            margin-bottom: 5px;
+        `;
+        modal.appendChild(arabicSlider);
+
+        const arabicSizeValue = document.createElement('div');
+        arabicSizeValue.id = 'arabicSizeValue';
+        arabicSizeValue.textContent = '32px';
+        arabicSizeValue.style.cssText = `
+            text-align: right;
+            margin-bottom: 20px;
+            color: #0b5e42;
+            font-weight: 500;
+        `;
+        modal.appendChild(arabicSizeValue);
+
+        // Размер транскрипции
+        const transLabel = document.createElement('label');
+        transLabel.textContent = 'Размер транскрипции:';
+        transLabel.style.cssText = `
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        `;
+        modal.appendChild(transLabel);
+
+        const transSlider = document.createElement('input');
+        transSlider.type = 'range';
+        transSlider.id = 'transSizeSlider';
+        transSlider.min = '12';
+        transSlider.max = '30';
+        transSlider.value = '16';
+        transSlider.style.cssText = `
+            width: 100%;
+            margin-bottom: 5px;
+        `;
+        modal.appendChild(transSlider);
+
+        const transSizeValue = document.createElement('div');
+        transSizeValue.id = 'transSizeValue';
+        transSizeValue.textContent = '16px';
+        transSizeValue.style.cssText = `
+            text-align: right;
+            margin-bottom: 20px;
+            color: #0b5e42;
+            font-weight: 500;
+        `;
+        modal.appendChild(transSizeValue);
+
+        // Размер перевода
+        const ruLabel = document.createElement('label');
+        ruLabel.textContent = 'Размер перевода:';
+        ruLabel.style.cssText = `
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        `;
+        modal.appendChild(ruLabel);
+
+        const ruSlider = document.createElement('input');
+        ruSlider.type = 'range';
+        ruSlider.id = 'ruSizeSlider';
+        ruSlider.min = '12';
+        ruSlider.max = '30';
+        ruSlider.value = '18';
+        ruSlider.style.cssText = `
+            width: 100%;
+            margin-bottom: 5px;
+        `;
+        modal.appendChild(ruSlider);
+
+        const ruSizeValue = document.createElement('div');
+        ruSizeValue.id = 'ruSizeValue';
+        ruSizeValue.textContent = '18px';
+        ruSizeValue.style.cssText = `
+            text-align: right;
+            margin-bottom: 25px;
+            color: #0b5e42;
+            font-weight: 500;
+        `;
+        modal.appendChild(ruSizeValue);
+
+        // Переключатели видимости
+        const toggleGroup = document.createElement('div');
+        toggleGroup.style.cssText = `
+            border-top: 2px solid #c4a747;
+            padding-top: 20px;
+            margin-bottom: 25px;
+        `;
+
+        // Чекбокс транскрипции
+        const transCheckDiv = document.createElement('div');
+        transCheckDiv.style.marginBottom = '15px';
+        
+        const transCheck = document.createElement('input');
+        transCheck.type = 'checkbox';
+        transCheck.id = 'showTrans';
+        transCheck.checked = true;
+        transCheck.style.marginRight = '10px';
+        transCheck.style.width = '18px';
+        transCheck.style.height = '18px';
+        
+        const transCheckLabel = document.createElement('label');
+        transCheckLabel.htmlFor = 'showTrans';
+        transCheckLabel.textContent = 'Показывать транскрипцию';
+        transCheckLabel.style.fontWeight = '600';
+        transCheckLabel.style.color = '#2c3e50';
+        
+        transCheckDiv.appendChild(transCheck);
+        transCheckDiv.appendChild(transCheckLabel);
+        toggleGroup.appendChild(transCheckDiv);
+
+        // Чекбокс перевода
+        const ruCheckDiv = document.createElement('div');
+        ruCheckDiv.style.marginBottom = '15px';
+        
+        const ruCheck = document.createElement('input');
+        ruCheck.type = 'checkbox';
+        ruCheck.id = 'showRu';
+        ruCheck.checked = true;
+        ruCheck.style.marginRight = '10px';
+        ruCheck.style.width = '18px';
+        ruCheck.style.height = '18px';
+        
+        const ruCheckLabel = document.createElement('label');
+        ruCheckLabel.htmlFor = 'showRu';
+        ruCheckLabel.textContent = 'Показывать перевод';
+        ruCheckLabel.style.fontWeight = '600';
+        ruCheckLabel.style.color = '#2c3e50';
+        
+        ruCheckDiv.appendChild(ruCheck);
+        ruCheckDiv.appendChild(ruCheckLabel);
+        toggleGroup.appendChild(ruCheckDiv);
+
+        modal.appendChild(toggleGroup);
+
+        // Кнопки управления
+        const btnGroup = document.createElement('div');
+        btnGroup.style.cssText = `
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+        `;
+
+        const saveBtn = document.createElement('button');
+        saveBtn.textContent = 'Сохранить';
+        saveBtn.style.cssText = `
+            background: #0b5e42;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            flex: 1;
+        `;
+
+        const closeBtn = document.createElement('button');
+        closeBtn.textContent = 'Закрыть';
+        closeBtn.style.cssText = `
+            background: #e0e0e0;
+            color: #333;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            flex: 1;
+        `;
+
+        btnGroup.appendChild(saveBtn);
+        btnGroup.appendChild(closeBtn);
+        modal.appendChild(btnGroup);
+
+        document.body.appendChild(modal);
+
+        // Overlay
+        const overlay = document.createElement('div');
+        overlay.id = 'settingsOverlay';
+        overlay.style.cssText = `
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 10000;
+        `;
+        document.body.appendChild(overlay);
+
+        // Функции открытия/закрытия
+        function openModal() {
+            modal.style.display = 'block';
+            overlay.style.display = 'block';
+        }
+
+        function closeModal() {
+            modal.style.display = 'none';
+            overlay.style.display = 'none';
+        }
+
+        // Обработчики
+        settingsBtn.addEventListener('click', openModal);
+        closeBtn.addEventListener('click', closeModal);
+        overlay.addEventListener('click', closeModal);
+
+        // Обновление отображаемых значений
+        arabicSlider.addEventListener('input', () => {
+            arabicSizeValue.textContent = arabicSlider.value + 'px';
+        });
+
+        transSlider.addEventListener('input', () => {
+            transSizeValue.textContent = transSlider.value + 'px';
+        });
+
+        ruSlider.addEventListener('input', () => {
+            ruSizeValue.textContent = ruSlider.value + 'px';
+        });
+
+        // Загрузка сохраненных настроек
+        function loadSettings() {
+            const savedArabic = localStorage.getItem('arabicFontSize');
+            const savedTrans = localStorage.getItem('transFontSize');
+            const savedRu = localStorage.getItem('ruFontSize');
+            const savedShowTrans = localStorage.getItem('showTrans');
+            const savedShowRu = localStorage.getItem('showRu');
+
+            if (savedArabic) {
+                arabicSlider.value = savedArabic;
+                arabicSizeValue.textContent = savedArabic + 'px';
+            }
+            if (savedTrans) {
+                transSlider.value = savedTrans;
+                transSizeValue.textContent = savedTrans + 'px';
+            }
+            if (savedRu) {
+                ruSlider.value = savedRu;
+                ruSizeValue.textContent = savedRu + 'px';
+            }
+            if (savedShowTrans !== null) {
+                transCheck.checked = savedShowTrans === 'true';
+            }
+            if (savedShowRu !== null) {
+                ruCheck.checked = savedShowRu === 'true';
+            }
+
+            applySettings();
+        }
+
+        // Применение настроек
+        function applySettings() {
+            // Размеры
+            document.querySelectorAll('.ar').forEach(el => {
+                el.style.fontSize = arabicSlider.value + 'px';
+            });
+            document.querySelectorAll('.trsc').forEach(el => {
+                el.style.fontSize = transSlider.value + 'px';
+            });
+            document.querySelectorAll('.ru').forEach(el => {
+                el.style.fontSize = ruSlider.value + 'px';
+            });
+
+            // Видимость
+            document.querySelectorAll('.trsc').forEach(el => {
+                el.style.display = transCheck.checked ? 'block' : 'none';
+            });
+            document.querySelectorAll('.ru').forEach(el => {
+                el.style.display = ruCheck.checked ? 'block' : 'none';
+            });
+
+            // Сохраняем
+            localStorage.setItem('arabicFontSize', arabicSlider.value);
+            localStorage.setItem('transFontSize', transSlider.value);
+            localStorage.setItem('ruFontSize', ruSlider.value);
+            localStorage.setItem('showTrans', transCheck.checked);
+            localStorage.setItem('showRu', ruCheck.checked);
+        }
+
+        saveBtn.addEventListener('click', () => {
+            applySettings();
+            closeModal();
+        });
+
+        // Загружаем настройки при старте
+        loadSettings();
+
+        // Добавляем наблюдатель для новых элементов
+        const observer = new MutationObserver(() => {
+            applySettings();
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+    }
+}
+
+// Запускаем после загрузки DOM
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', createTextSettings);
+} else {
+    createTextSettings();
+}
+
+// Экспортируем функцию на случай ручного вызова
+window.createTextSettings = createTextSettings;
+</script>
+</head>
+<body>
+
+    
+<!-- 1. аль-А'раф 7:23 -->
+<div class="dua-section">
+    <div class="title">1. аль-А‘раф 7:23</div>
+    <div class="source">Источник: Сура 7, аят 23</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">رَبَّنَا ظَلَمْنَا أَنفُسَنَا</div>
+            <div class="trsc">Раббана залямна анфусана</div>
+            <div class="ru">Господь наш! Мы поступили несправедливо по отношению к себе</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَإِن لَّمْ تَغْفِرْ لَنَا وَتَرْحَمْنَا</div>
+            <div class="trsc">уа илля тагфир ляна уа тархамна</div>
+            <div class="ru">и если Ты не простишь нас и не смилостивишься над нами</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">لَنَكُونَنَّ مِنَ الْخَاسِرِينَ</div>
+            <div class="trsc">лянакунанна миналь-хасирин</div>
+            <div class="ru">то мы непременно окажемся одними из потерпевших убыток</div>
+        </div>
+    </div>
+</div>
+
+<!-- 2. аль-Мумтахана 60:4 -->
+<div class="dua-section">
+    <div class="title">2. аль-Мумтахана 60:4</div>
+    <div class="source">Источник: Сура 60, аят 4</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">رَبَّنَا عَلَيْكَ تَوَكَّلْنَا</div>
+            <div class="trsc">Раббана ‘аляйка тауаккальна</div>
+            <div class="ru">Господь наш! На Тебя одного мы уповаем</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَإِلَيْكَ أَنَبْنَا</div>
+            <div class="trsc">уа илейка анабна</div>
+            <div class="ru">к Тебе одному мы обращаемся</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَإِلَيْكَ الْمَصِيرُ</div>
+            <div class="trsc">уа илейкаль-масыр</div>
+            <div class="ru">и к Тебе предстоит возвращение</div>
+        </div>
+    </div>
+</div>
+
+<!-- 3. Али Имран 3:53 -->
+<div class="dua-section">
+    <div class="title">3. Али ‘Имран 3:53</div>
+    <div class="source">Источник: Сура 3, аят 53</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">رَبَّنَا آمَنَّا بِمَا أَنزَلْتَ</div>
+            <div class="trsc">Раббана аманна бима анзальта</div>
+            <div class="ru">Господь наш! Мы уверовали в то, что Ты ниспослал</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَاتَّبَعْنَا الرَّسُولَ</div>
+            <div class="trsc">уа-ттаба‘на-ррасуля</div>
+            <div class="ru">и последовали за посланником</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">فَاكْتُبْنَا مَعَ الشَّاهِدِينَ</div>
+            <div class="trsc">фактубна ма‘а-шшахидин</div>
+            <div class="ru">Запиши же нас в числе свидетельствующих</div>
+        </div>
+    </div>
+</div>
+
+<!-- 4. аль-Му'минун 23:109 -->
+<div class="dua-section">
+    <div class="title">4. аль-Му’минун 23:109</div>
+    <div class="source">Источник: Сура 23, аят 109</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">رَبَّنَا آمَنَّا</div>
+            <div class="trsc">Раббана аманна</div>
+            <div class="ru">Господь наш! Мы уверовали</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">فَاغْفِرْ لَنَا وَارْحَمْنَا</div>
+            <div class="trsc">фагфир ляна уархамна</div>
+            <div class="ru">Прости же нас и помилуй</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَأَنتَ خَيْرُ الرَّاحِمِينَ</div>
+            <div class="trsc">уа анта хайру-ррахимин</div>
+            <div class="ru">ибо Ты — Наилучший из милосердных</div>
+        </div>
+    </div>
+</div>
+
+<!-- 5. аль-Маида 5:83 -->
+<div class="dua-section">
+    <div class="title">5. аль-Маида 5:83</div>
+    <div class="source">Источник: Сура 5, аят 83</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">رَبَّنَا آمَنَّا</div>
+            <div class="trsc">Раббана аманна</div>
+            <div class="ru">Господь наш! Мы уверовали</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">فَاكْتُبْنَا مَعَ الشَّاهِدِينَ</div>
+            <div class="trsc">фактубна ма‘а-шшахидин</div>
+            <div class="ru">Запиши же нас в числе свидетельствующих</div>
+        </div>
+    </div>
+</div>
+
+<!-- 6. Али Имран 3:16 -->
+<div class="dua-section">
+    <div class="title">6. Али ‘Имран 3:16</div>
+    <div class="source">Источник: Сура 3, аят 16</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">رَبَّنَا إِنَّنَا آمَنَّا</div>
+            <div class="trsc">Раббана иннана аманна</div>
+            <div class="ru">Господь наш! Воистину, мы уверовали</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">فَاغْفِرْ لَنَا ذُنُوبَنَا</div>
+            <div class="trsc">фагфир ляна зунубана</div>
+            <div class="ru">Прости же нам наши грехи</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَقِنَا عَذَابَ النَّارِ</div>
+            <div class="trsc">уа кина ‘азаба-ннар</div>
+            <div class="ru">и защити нас от мучений Огня</div>
+        </div>
+    </div>
+</div>
+
+<!-- 7. ат-Тахрим 66:8 -->
+<div class="dua-section">
+    <div class="title">7. ат-Тахрим 66:8</div>
+    <div class="source">Источник: Сура 66, аят 8</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">رَبَّنَا أَتْمِمْ لَنَا نُورَنَا</div>
+            <div class="trsc">Раббана атмим ляна нурана</div>
+            <div class="ru">Господь наш! Дай нам света сполна</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَاغْفِرْ لَنَا</div>
+            <div class="trsc">уагфир ляна</div>
+            <div class="ru">и прости нас</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">إِنَّكَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ</div>
+            <div class="trsc">иннака ‘аля кулли шай-ин кадир</div>
+            <div class="ru">Воистину, Ты способен на всякую вещь</div>
+        </div>
+    </div>
+</div>
+
+<!-- 8. аль-Хашр 59:10 -->
+<div class="dua-section">
+    <div class="title">8. аль-Хашр 59:10</div>
+    <div class="source">Источник: Сура 59, аят 10</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">رَبَّنَا اغْفِرْ لَنَا وَلِإِخْوَانِنَا الَّذِينَ سَبَقُونَا بِالْإِيمَانِ</div>
+            <div class="trsc">Раббана-гфир ляна уа ли ихуанина-ллязина сабакъуна биль-имани</div>
+            <div class="ru">Господь наш! Прости нас и наших братьев, которые уверовали раньше нас</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَلَا تَجْعَلْ فِي قُلُوبِنَا غِلًّا لِّلَّذِينَ آمَنُوا</div>
+            <div class="trsc">уа ля тадж‘аль фи кулюбина гилля-ллиллязина аману</div>
+            <div class="ru">Не насаждай в наших сердцах ненависти и зависти к тем, кто уверовал</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">رَبَّنَا إِنَّكَ رَءُوفٌ رَّحِيمٌ</div>
+            <div class="trsc">Раббана иннака Рауфун Рахим</div>
+            <div class="ru">Господь наш! Воистину, Ты — Сострадательный, Милосердный</div>
+        </div>
+    </div>
+</div>
+
+<!-- 9. аль-Бакара 2:127-128 -->
+<div class="dua-section">
+    <div class="title">9. аль-Бакара 2:127–128</div>
+    <div class="source">Источник: Сура 2, аяты 127–128</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">رَبَّنَا تَقَبَّلْ مِنَّا</div>
+            <div class="trsc">Раббана такаббаль минна</div>
+            <div class="ru">Господь наш! Прими от нас</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">إِنَّكَ أَنتَ السَّمِيعُ الْعَلِيمُ</div>
+            <div class="trsc">иннака Анта-Ссами‘уль-‘Алим</div>
+            <div class="ru">Воистину, Ты — Слышащий, Знающий</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">رَبَّنَا وَاجْعَلْنَا مُسْلِمَيْنِ لَكَ</div>
+            <div class="trsc">Раббана уадж‘альна муслимайни ляка</div>
+            <div class="ru">Господь наш! Сделай нас покорившимися Тебе</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَمِن ذُرِّيَّتِنَا أُمَّةً مُّسْلِمَةً لَّكَ</div>
+            <div class="trsc">уа мин зуррийятина уммата-ммуслимата-лляка</div>
+            <div class="ru">а из нашего потомства — общину, покорившуюся Тебе</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَأَرِنَا مَنَاسِكَنَا وَتُبْ عَلَيْنَا</div>
+            <div class="trsc">уа арина манасикана уа туб ‘алейна</div>
+            <div class="ru">Покажи нам обряды поклонения и прими наше покаяние</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">إِنَّكَ أَنتَ التَّوَّابُ الرَّحِيمُ</div>
+            <div class="trsc">иннака Анта-Ттаууабу-Ррахим</div>
+            <div class="ru">Воистину, Ты — Принимающий покаяние, Милосердный</div>
+        </div>
+    </div>
+</div>
+
+<!-- 10. аль-Мумтахана 60:5 -->
+<div class="dua-section">
+    <div class="title">10. аль-Мумтахана 60:5</div>
+    <div class="source">Источник: Сура 60, аят 5</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">رَبَّنَا لَا تَجْعَلْنَا فِتْنَةً لِّلَّذِينَ كَفَرُوا</div>
+            <div class="trsc">Раббана ля тадж‘альна фитната-лиллязина кафару</div>
+            <div class="ru">Господь наш! Не делай нас искушением для тех, которые не веруют</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَاغْفِرْ لَنَا رَبَّنَا</div>
+            <div class="trsc">уагфир ляна Раббана</div>
+            <div class="ru">Господь наш, прости нас</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">إِنَّكَ أَنتَ الْعَزِيزُ الْحَكِيمُ</div>
+            <div class="trsc">иннака Анталь-‘Азизуль-Хаким</div>
+            <div class="ru">ведь Ты — Могущественный, Мудрый</div>
+        </div>
+    </div>
+</div>
+
+<!-- 11. Юнус 10:85-86 -->
+<div class="dua-section">
+    <div class="title">11. Юнус 10:85–86</div>
+    <div class="source">Источник: Сура 10, аяты 85–86</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">رَبَّنَا لَا تَجْعَلْنَا فِتْنَةً لِّلْقَوْمِ الظَّالِمِينَ</div>
+            <div class="trsc">Раббана ля тадж‘альна фитната-лиль-каум-иззалимин</div>
+            <div class="ru">Господь наш, не делай нас искушением для людей несправедливых</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَنَجِّنَا بِرَحْمَتِكَ مِنَ الْقَوْمِ الْكَافِرِينَ</div>
+            <div class="trsc">уа надджина бирахматика миналь-кауми-ль-кафирин</div>
+            <div class="ru">По Своей милости спаси нас от людей неверующих</div>
+        </div>
+    </div>
+</div>
+
+<!-- 12. Али Имран 3:147 -->
+<div class="dua-section">
+    <div class="title">12. Али ‘Имран 3:147</div>
+    <div class="source">Источник: Сура 3, аят 147</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">رَبَّنَا اغْفِرْ لَنَا ذُنُوبَنَا وَإِسْرَافَنَا فِي أَمْرِنَا</div>
+            <div class="trsc">Раббана-гфир ляна зунубана уа исрафана фи амрина</div>
+            <div class="ru">Господь наш! Прости нам наши грехи и излишества в нашем деле</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَثَبِّتْ أَقْدَامَنَا</div>
+            <div class="trsc">уа саббит акдамана</div>
+            <div class="ru">утверди наши стопы</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَانصُرْنَا عَلَى الْقَوْمِ الْكَافِرِينَ</div>
+            <div class="trsc">уансурна ‘аляль-кауми-ль-кафирин</div>
+            <div class="ru">и даруй нам победу над людьми неверующими</div>
+        </div>
+    </div>
+</div>
+
+<!-- 13. аль-Кахф 18:10 -->
+<div class="dua-section">
+    <div class="title">13. аль-Кахф 18:10</div>
+    <div class="source">Источник: Сура 18, аят 10</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">رَبَّنَا آتِنَا مِن لَّدُنكَ رَحْمَةً</div>
+            <div class="trsc">Раббана атина ми-лляду́нка рахматан</div>
+            <div class="ru">Господь наш! Даруй нам от Себя милость</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَهَيِّئْ لَنَا مِنْ أَمْرِنَا رَشَدًا</div>
+            <div class="trsc">уа хаййи‘ ляна мин амрина рашада</div>
+            <div class="ru">и устрой наше дело наилучшим образом</div>
+        </div>
+    </div>
+</div>
+
+<!-- 14. аль-Фуркан 25:74 -->
+<div class="dua-section">
+    <div class="title">14. аль-Фуркан 25:74</div>
+    <div class="source">Источник: Сура 25, аят 74</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">رَبَّنَا هَبْ لَنَا مِنْ أَزْوَاجِنَا وَذُرِّيَّاتِنَا قُرَّةَ أَعْيُنٍ</div>
+            <div class="trsc">Раббана хаб ляна мин азуаджина уа зуррийятина куррата а‘юн</div>
+            <div class="ru">Господь наш! Даруй нам отраду глаз в наших супругах и потомках</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَاجْعَلْنَا لِلْمُتَّقِينَ إِمَامًا</div>
+            <div class="trsc">уадж‘альна лиль-муттакина имама</div>
+            <div class="ru">и сделай нас образцом для богобоязненных</div>
+        </div>
+    </div>
+</div>
+
+<!-- 15. аль-Фуркан 25:65-66 -->
+<div class="dua-section">
+    <div class="title">15. аль-Фуркан 25:65–66</div>
+    <div class="source">Источник: Сура 25, аяты 65–66</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">رَبَّنَا اصْرِفْ عَنَّا عَذَابَ جَهَنَّمَ</div>
+            <div class="trsc">Раббана-срыф ‘анна ‘азаба джаханнам</div>
+            <div class="ru">Господь наш! Отврати от нас мучения в Геенне</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">إِنَّ عَذَابَهَا كَانَ غَرَامًا</div>
+            <div class="trsc">инна ‘азабаха кана гарама</div>
+            <div class="ru">поскольку мучения там не отступают</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">إِنَّهَا سَاءَتْ مُسْتَقَرًّا وَمُقَامًا</div>
+            <div class="trsc">иннаха са-ат мустакаррауу уа мукама</div>
+            <div class="ru">Как скверна эта обитель и местопребывание</div>
+        </div>
+    </div>
+</div>
+
+<!-- 16. аль-Бакара 2:201 -->
+<div class="dua-section">
+    <div class="title">16. аль-Бакара 2:201</div>
+    <div class="source">Источник: Сура 2, аят 201</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً</div>
+            <div class="trsc">Раббана атина фи-ддунья хасанатан</div>
+            <div class="ru">Господь наш! Одари нас добром в этом мире</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَفِي الْآخِرَةِ حَسَنَةً</div>
+            <div class="trsc">уа филь-ахирати хасанатан</div>
+            <div class="ru">и добром в Последней жизни</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَقِنَا عَذَابَ النَّارِ</div>
+            <div class="trsc">уа кина ‘азаба-ннар</div>
+            <div class="ru">и защити нас от мучений Огня</div>
+        </div>
+    </div>
+</div>
+
+<!-- 17. аль-Бакара 2:285-286 -->
+<div class="dua-section">
+    <div class="title">17. аль-Бакара 2:285–286</div>
+    <div class="source">Источник: Сура 2, аяты 285–286</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">رَبَّنَا لَا تُؤَاخِذْنَا إِن نَّسِينَا أَوْ أَخْطَأْنَا</div>
+            <div class="trsc">Раббана ля туахизна ин насина ау ахта’на</div>
+            <div class="ru">Господь наш! Не наказывай нас, если мы позабыли или ошиблись</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">رَبَّنَا وَلَا تَحْمِلْ عَلَيْنَا إِصْرًا كَمَا حَمَلْتَهُ عَلَى الَّذِينَ مِن قَبْلِنَا</div>
+            <div class="trsc">Раббана уа ля тахмиль ‘алейна исран кама хамальтаху ‘аля-ллязина мин каблина</div>
+            <div class="ru">Господь наш! Не возлагай на нас бремя, которое Ты возложил на наших предшественников</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">رَبَّنَا وَلَا تُحَمِّلْنَا مَا لَا طَاقَةَ لَنَا بِهِ</div>
+            <div class="trsc">Раббана уа ля тухаммильна ма ля таката ляна бихи</div>
+            <div class="ru">Господь наш! Не обременяй нас тем, что нам не под силу</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَاعْفُ عَنَّا وَاغْفِرْ لَنَا وَارْحَمْنَا</div>
+            <div class="trsc">уа‘фу ‘анна уагфир ляна уархамна</div>
+            <div class="ru">Будь снисходителен к нам! Прости нас и помилуй</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">أَنتَ مَوْلَانَا فَانصُرْنَا عَلَى الْقَوْمِ الْكَافِرِينَ</div>
+            <div class="trsc">анта мауляна фансурна ‘аляль-кауми-ль-кафирин</div>
+            <div class="ru">Ты — наш Покровитель. Помоги же нам одержать верх над неверующими людьми</div>
+        </div>
+    </div>
+</div>
+
+<!-- 18. Али Имран 3:8-9 -->
+<div class="dua-section">
+    <div class="title">18. Али ‘Имран 3:8–9</div>
+    <div class="source">Источник: Сура 3, аяты 8–9</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">رَبَّنَا لَا تُزِغْ قُلُوبَنَا بَعْدَ إِذْ هَدَيْتَنَا</div>
+            <div class="trsc">Раббана ля тузигъ кулюбана ба‘да из хадайтана</div>
+            <div class="ru">Господь наш! Не уклоняй наши сердца после того, как Ты наставил нас на прямой путь</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَهَبْ لَنَا مِن لَّدُنكَ رَحْمَةً</div>
+            <div class="trsc">уа хаб ляна ми-лляду́нка рахматан</div>
+            <div class="ru">и даруй нам милость от Себя</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">إِنَّكَ أَنتَ الْوَهَّابُ</div>
+            <div class="trsc">иннака Анталь-Уаккаб</div>
+            <div class="ru">ведь Ты — Дарующий</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">رَبَّنَا إِنَّكَ جَامِعُ النَّاسِ لِيَوْمٍ لَّا رَيْبَ فِيهِ</div>
+            <div class="trsc">Раббана иннака джами‘у-ннаси лияуми-лля райба фихи</div>
+            <div class="ru">Господь наш! Ты соберёшь людей в день, в котором нет сомнения</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">إِنَّ اللَّهَ لَا يُخْلِفُ الْمِيعَادَ</div>
+            <div class="trsc">инна-Ллаха ля юхлифуль-ми‘ад</div>
+            <div class="ru">Воистину, Аллах не нарушает обещания</div>
+        </div>
+    </div>
+</div>
+
+<!-- 19. Али Имран 3:191-194 -->
+<div class="dua-section">
+    <div class="title">19. Али ‘Имран 3:191–194</div>
+    <div class="source">Источник: Сура 3, аяты 191–194</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">رَبَّنَا مَا خَلَقْتَ هَذَا بَاطِلًا سُبْحَانَكَ فَقِنَا عَذَابَ النَّارِ</div>
+            <div class="trsc">Раббана ма халакта хаза батылян субханака факина ‘азаба-ннар</div>
+            <div class="ru">Господь наш! Ты не сотворил это понапрасну. Пречист Ты! Защити же нас от мучений в Огне</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">رَبَّنَا إِنَّنَا سَمِعْنَا مُنَادِيًا يُنَادِي لِلْإِيمَانِ</div>
+            <div class="trsc">Раббана иннана сами‘на мунадийан юнади лиль-имани</div>
+            <div class="ru">Господь наш! Мы услышали глашатая, который призывал к вере</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">أَنْ آمِنُوا بِرَبِّكُمْ فَآمَنَّا</div>
+            <div class="trsc">ан амину бираббикум фааманна</div>
+            <div class="ru">и мы уверовали</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">رَبَّنَا فَاغْفِرْ لَنَا ذُنُوبَنَا وَكَفِّرْ عَنَّا سَيِّئَاتِنَا</div>
+            <div class="trsc">Раббана фагфир ляна зунубана уа каффир ‘анна сайиатина</div>
+            <div class="ru">Господь наш! Прости нам наши грехи, отпусти нам наши прегрешения</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَتَوَفَّنَا مَعَ الْأَبْرَارِ</div>
+            <div class="trsc">уа тауаффана ма‘аль-абрар</div>
+            <div class="ru">и упокой нас вместе с благочестивыми</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">رَبَّنَا وَآتِنَا مَا وَعَدتَّنَا عَلَى رُسُلِكَ</div>
+            <div class="trsc">Раббана уа атина ма уа‘адтана ‘аля русулика</div>
+            <div class="ru">Господь наш! Даруй нам то, что Ты обещал нам через Своих посланников</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَلَا تُخْزِنَا يَوْمَ الْقِيَامَةِ</div>
+            <div class="trsc">уа ля тухзина яумаль-кияма</div>
+            <div class="ru">и не позорь нас в День воскресения</div>
+        </div>
+    </div>
+</div>
+
+<!-- 20. Ибрахим 14:40-41 -->
+<div class="dua-section">
+    <div class="title">20. Ибрахим 14:40–41</div>
+    <div class="source">Источник: Сура 14, аяты 40–41</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">رَبِّ اجْعَلْنِي مُقِيمَ الصَّلَاةِ وَمِن ذُرِّيَّتِي</div>
+            <div class="trsc">Рабби-дж‘альни мукима-ссаляти уа мин зуррийяти</div>
+            <div class="ru">Господи! Сделай меня выстаивающим молитву и из моего потомства</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">رَبَّنَا وَتَقَبَّلْ دُعَاءِ</div>
+            <div class="trsc">Раббана уа такаббаль ду‘а</div>
+            <div class="ru">Господь наш! Прими мою мольбу</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">رَبَّنَا اغْفِرْ لِي وَلِوَالِدَيَّ وَلِلْمُؤْمِنِينَ يَوْمَ يَقُومُ الْحِسَابُ</div>
+            <div class="trsc">Раббана-гфир ли уа ли уалидайя уа лиль-му‘минина яума якуму-ль-хисаб</div>
+            <div class="ru">Господь наш! Прости меня, моих родителей и верующих в тот день, когда будет представлен счёт</div>
+        </div>
+    </div>
+</div>
+
+<!-- 21. аль-Анбия 21:87 -->
+<div class="dua-section">
+    <div class="title">21. аль-Анбия 21:87</div>
+    <div class="source">Источник: Сура 21, аят 87</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">لَا إِلَهَ إِلَّا أَنتَ سُبْحَانَكَ</div>
+            <div class="trsc">Ля иляха илля Анта субханака</div>
+            <div class="ru">Нет божества, кроме Тебя! Пречист Ты!</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">إِنِّي كُنتُ مِنَ الظَّالِمِينَ</div>
+            <div class="trsc">инни кунту мина-ззалимин</div>
+            <div class="ru">Воистину, я был одним из беззаконников</div>
+        </div>
+    </div>
+</div>
+
+<!-- 22. ан-Намль 27:19 -->
+<div class="dua-section">
+    <div class="title">22. ан-Намль 27:19</div>
+    <div class="source">Источник: Сура 27, аят 19</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">رَبِّ أَوْزِعْنِي أَن أَشْكُرَ نِعْمَتَكَ الَّتِي أَنْعَمْتَ عَلَيَّ وَعَلَى وَالِدَيَّ</div>
+            <div class="trsc">Рабби аузи‘ни ан ашкура ни‘матака-лляти ан‘амта ‘аляйя уа ‘аля уалидайя</div>
+            <div class="ru">Господи! Внуши мне быть благодарным за Твою милость, которую Ты оказал мне и моим родителям</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَأَنْ أَعْمَلَ صَالِحًا تَرْضَاهُ</div>
+            <div class="trsc">уа ан а‘маля салихан тардаху</div>
+            <div class="ru">и совершать праведные деяния, которыми Ты будешь доволен</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَأَدْخِلْنِي بِرَحْمَتِكَ فِي عِبَادِكَ الصَّالِحِينَ</div>
+            <div class="trsc">уа адхильни бирахматика фи ‘ибадика-ссалихин</div>
+            <div class="ru">Введи меня по Своей милости в число Своих праведных рабов</div>
+        </div>
+    </div>
+</div>
+
+<!-- 23. аль-Ахкаф 46:15 -->
+<div class="dua-section">
+    <div class="title">23. аль-Ахкаф 46:15</div>
+    <div class="source">Источник: Сура 46, аят 15</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">رَبِّ أَوْزِعْنِي أَنْ أَشْكُرَ نِعْمَتَكَ الَّتِي أَنْعَمْتَ عَلَيَّ وَعَلَى وَالِدَيَّ</div>
+            <div class="trsc">Рабби аузи‘ни ан ашкура ни‘матака-лляти ан‘амта ‘аляйя уа ‘аля уалидайя</div>
+            <div class="ru">Господи! Внуши мне благодарность за милость, которой Ты облагодетельствовал меня и моих родителей</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَأَنْ أَعْمَلَ صَالِحًا تَرْضَاهُ</div>
+            <div class="trsc">уа ан а‘маля салихан тардаху</div>
+            <div class="ru">и помоги мне совершать праведные деяния, которыми Ты доволен</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَأَصْلِحْ لِي فِي ذُرِّيَّتِي</div>
+            <div class="trsc">уа аслих ли фи зуррийяти</div>
+            <div class="ru">Сделай для меня моих потомков праведниками</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">إِنِّي تُبْتُ إِلَيْكَ وَإِنِّي مِنَ الْمُسْلِمِينَ</div>
+            <div class="trsc">инни тубту илейка уа инни миналь-муслимин</div>
+            <div class="ru">Я раскаиваюсь перед Тобой. Воистину, я — один из мусульман</div>
+        </div>
+    </div>
+</div>
+
+<!-- 24. аль-Касас 28:16 -->
+<div class="dua-section">
+    <div class="title">24. аль-Касас 28:16</div>
+    <div class="source">Источник: Сура 28, аят 16</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">رَبِّ إِنِّي ظَلَمْتُ نَفْسِي فَاغْفِرْ لِي</div>
+            <div class="trsc">Рабби инни залямту нафси фагфир ли</div>
+            <div class="ru">Господи! Я поступил несправедливо по отношению к себе. Прости же меня</div>
+        </div>
+    </div>
+</div>
+
+<!-- 25. Та-ха 20:25-28 -->
+<div class="dua-section">
+    <div class="title">25. Та-ха 20:25–28</div>
+    <div class="source">Источник: Сура 20, аяты 25–28</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">رَبِّ اشْرَحْ لِي صَدْرِي</div>
+            <div class="trsc">Рабби-шрах ли садри</div>
+            <div class="ru">Господи! Раскрой для меня мою грудь</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَيَسِّرْ لِي أَمْرِي</div>
+            <div class="trsc">уа яссир ли амри</div>
+            <div class="ru">Облегчи мою миссию</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَاحْلُلْ عُقْدَةً مِّن لِّسَانِي</div>
+            <div class="trsc">уахлюль ‘укъдатам ми-ллисани</div>
+            <div class="ru">Развяжи узел на моём языке</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">يَفْقَهُوا قَوْلِي</div>
+            <div class="trsc">яфкаху кауль</div>
+            <div class="ru">чтобы они могли понять мою речь</div>
+        </div>
+    </div>
+</div>
+
+<!-- 26. Худ 11:47 -->
+<div class="dua-section">
+    <div class="title">26. Худ 11:47</div>
+    <div class="source">Источник: Сура 11, аят 47</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">رَبِّ إِنِّي أَعُوذُ بِكَ أَنْ أَسْأَلَكَ مَا لَيْسَ لِي بِهِ عِلْمٌ</div>
+            <div class="trsc">Рабби инни а‘узу бика ан ас-аляка ма лейса ли бихи ‘ильм</div>
+            <div class="ru">Господи! Я прибегаю к Тебе, дабы не просить о том, чего не ведаю</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَإِلَّا تَغْفِرْ لِي وَتَرْحَمْنِي أَكُن مِّنَ الْخَاسِرِينَ</div>
+            <div class="trsc">уа илля тагфир ли уа тархамни акун-миналь-хасирин</div>
+            <div class="ru">И если Ты не простишь меня и не помилуешь, то я окажусь среди потерпевших убыток</div>
+        </div>
+    </div>
+</div>
+
+<!-- 27. аш-Шуара 26:83-85 -->
+<div class="dua-section">
+    <div class="title">27. аш-Шу‘ара 26:83–85</div>
+    <div class="source">Источник: Сура 26, аяты 83–85</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">رَبِّ هَبْ لِي حُكْمًا وَأَلْحِقْنِي بِالصَّالِحِينَ</div>
+            <div class="trsc">Рабби хаб ли хукман уа альхикни би-ссалихин</div>
+            <div class="ru">Господи! Даруй мне мудрость и воссоедини меня с праведниками</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَاجْعَل لِّي لِسَانَ صِدْقٍ فِي الْآخِرِينَ</div>
+            <div class="trsc">уадж‘аль ли лисана сыдкъин филь-ахирин</div>
+            <div class="ru">Оставь обо мне правдивую молву в последующих поколениях</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَاجْعَلْنِي مِن وَرَثَةِ جَنَّةِ النَّعِيمِ</div>
+            <div class="trsc">уадж‘альни мин уарасати джаннати-нна‘им</div>
+            <div class="ru">Сделай меня одним из наследников Сада блаженства</div>
+        </div>
+    </div>
+</div>
+
+<!-- 28. Нух 71:28 -->
+<div class="dua-section">
+    <div class="title">28. Нух 71:28</div>
+    <div class="source">Источник: Сура 71, аят 28</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">رَبِّ اغْفِرْ لِي وَلِوَالِدَيَّ وَلِمَن دَخَلَ بَيْتِيَ مُؤْمِنًا</div>
+            <div class="trsc">Рабби-гфир ли уа ли уалидайя уа лиман дахаля байтия му‘минан</div>
+            <div class="ru">Господи! Прости меня и моих родителей и тех, кто вошёл в мой дом верующим</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَلِلْمُؤْمِنِينَ وَالْمُؤْمِنَاتِ</div>
+            <div class="trsc">уа лиль-му‘минина уаль-му‘минати</div>
+            <div class="ru">а также верующих мужчин и женщин</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَلَا تَزِدِ الظَّالِمِينَ إِلَّا تَبَارًا</div>
+            <div class="trsc">уа ля тазиди-ззалимина илля табара</div>
+            <div class="ru">А беззаконникам не приумножай ничего, кроме погибели</div>
+        </div>
+    </div>
+</div>
+
+<!-- 29. Али Имран 3:38 -->
+<div class="dua-section">
+    <div class="title">29. Али ‘Имран 3:38</div>
+    <div class="source">Источник: Сура 3, аят 38</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">رَبِّ هَبْ لِي مِن لَّدُنكَ ذُرِّيَّةً طَيِّبَةً</div>
+            <div class="trsc">Рабби хаб ли ми-лляду́нка зуррийятан тайибатан</div>
+            <div class="ru">Господи! Одари меня прекрасным потомством от Себя</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">إِنَّكَ سَمِيعُ الدُّعَاءِ</div>
+            <div class="trsc">иннака Сами‘у-дду‘а</div>
+            <div class="ru">ведь Ты внимаешь мольбе</div>
+        </div>
+    </div>
+</div>
+
+<!-- 30. аль-Анбия 21:89 -->
+<div class="dua-section">
+    <div class="title">30. аль-Анбия 21:89</div>
+    <div class="source">Источник: Сура 21, аят 89</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">رَبِّ لَا تَذَرْنِي فَرْدًا</div>
+            <div class="trsc">Рабби ля тазарни фардан</div>
+            <div class="ru">Господи! Не оставляй меня одиноким</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَأَنتَ خَيْرُ الْوَارِثِينَ</div>
+            <div class="trsc">уа анта хайруль-уарисин</div>
+            <div class="ru">и Ты — Наилучший из наследников</div>
+        </div>
+    </div>
+</div>
+
+<!-- 31. ас-Саффат 37:100 -->
+<div class="dua-section">
+    <div class="title">31. ас-Саффат 37:100</div>
+    <div class="source">Источник: Сура 37, аят 100</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">رَبِّ هَبْ لِي مِنَ الصَّالِحِينَ</div>
+            <div class="trsc">Рабби хаб ли мина-ссалихин</div>
+            <div class="ru">Господи, одари меня потомством из числа праведников</div>
+        </div>
+    </div>
+</div>
+
+<!-- 32. аль-Му'минун 23:118 -->
+<div class="dua-section">
+    <div class="title">32. аль-Му’минун 23:118</div>
+    <div class="source">Источник: Сура 23, аят 118</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">رَبِّ اغْفِرْ وَارْحَمْ</div>
+            <div class="trsc">Рабби-гфир уархам</div>
+            <div class="ru">Господи, прости и помилуй</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَأَنتَ خَيْرُ الرَّاحِمِينَ</div>
+            <div class="trsc">уа анта хайру-ррахимин</div>
+            <div class="ru">ведь Ты — Наилучший из милосердных</div>
+        </div>
+    </div>
+</div>
+
+<!-- 33. аль-Му'минун 23:97-98 -->
+<div class="dua-section">
+    <div class="title">33. аль-Му’минун 23:97–98</div>
+    <div class="source">Источник: Сура 23, аяты 97–98</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">رَبِّ أَعُوذُ بِكَ مِنْ هَمَزَاتِ الشَّيَاطِينِ</div>
+            <div class="trsc">Рабби а‘узу бика мин хамазати-шшаятин</div>
+            <div class="ru">Господи! Я прибегаю к Тебе от наваждений дьяволов</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَأَعُوذُ بِكَ رَبِّ أَن يَحْضُرُونِ</div>
+            <div class="trsc">уа а‘узу бика Рабби ай-яхдурун</div>
+            <div class="ru">Я прибегаю к Тебе, Господи, дабы они не приближались ко мне</div>
+        </div>
+    </div>
+</div>
+
+<!-- 34. Та-ха 20:114 -->
+<div class="dua-section">
+    <div class="title">34. Та-ха 20:114</div>
+    <div class="source">Источник: Сура 20, аят 114</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">رَبِّ زِدْنِي عِلْمًا</div>
+            <div class="trsc">Рабби зидни ‘ильма</div>
+            <div class="ru">Господи! Приумножь мои знания</div>
+        </div>
+    </div>
+</div>
+
+<!-- 35. аль-Исра 17:80 -->
+<div class="dua-section">
+    <div class="title">35. аль-Исра 17:80</div>
+    <div class="source">Источник: Сура 17, аят 80</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">رَبِّ أَدْخِلْنِي مُدْخَلَ صِدْقٍ</div>
+            <div class="trsc">Рабби адхльни мудхаля сыдкин</div>
+            <div class="ru">Господи! Пусть моё пришествие будет правдивым</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَأَخْرِجْنِي مُخْرَجَ صِدْقٍ</div>
+            <div class="trsc">уа ахриджни мухраджа сыдкин</div>
+            <div class="ru">и пусть мой уход будет правдивым</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَاجْعَل لِّي مِن لَّدُنكَ سُلْطَانًا نَّصِيرًا</div>
+            <div class="trsc">уадж‘аль ли ми-лляду́нка султана-ннасыра</div>
+            <div class="ru">Даруй мне от Тебя знамение в помощь</div>
+        </div>
+    </div>
+</div>
+
+<!-- 36. аль-Му'минун 23:26 -->
+<div class="dua-section">
+    <div class="title">36. аль-Му’минун 23:26</div>
+    <div class="source">Источник: Сура 23, аят 26</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">رَبِّ انصُرْنِي بِمَا كَذَّبُونِ</div>
+            <div class="trsc">Рабби-нсурни бима каззабун</div>
+            <div class="ru">Господи! Помоги мне, ведь они сочли меня лжецом</div>
+        </div>
+    </div>
+</div>
+
+<!-- 37. аль-Му'минун 23:29 -->
+<div class="dua-section">
+    <div class="title">37. аль-Му’минун 23:29</div>
+    <div class="source">Источник: Сура 23, аят 29</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">رَبِّ أَنزِلْنِي مُنزَلًا مُّبَارَكًا</div>
+            <div class="trsc">Рабби анзильни мунзалян мубаракан</div>
+            <div class="ru">Господи! Приведи меня к благословенному месту</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَأَنتَ خَيْرُ الْمُنزِلِينَ</div>
+            <div class="trsc">уа анта хайруль-мунзилин</div>
+            <div class="ru">ведь Ты — Наилучший из расселяющих</div>
+        </div>
+    </div>
+</div>
+
+<!-- 38. аль-Анкабут 29:30 -->
+<div class="dua-section">
+    <div class="title">38. аль-‘Анкабут 29:30</div>
+    <div class="source">Источник: Сура 29, аят 30</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">رَبِّ انصُرْنِي عَلَى الْقَوْمِ الْمُفْسِدِينَ</div>
+            <div class="trsc">Рабби-нсурни ‘аляль-кауми-ль-муфсидин</div>
+            <div class="ru">Господи! Помоги мне одержать верх над нечестивыми людьми</div>
+        </div>
+    </div>
+</div>
+
+<!-- 39. аль-Бакара 2:126 -->
+<div class="dua-section">
+    <div class="title">39. аль-Бакара 2:126</div>
+    <div class="source">Источник: Сура 2, аят 126</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">رَبِّ اجْعَلْ هَذَا بَلَدًا آمِنًا</div>
+            <div class="trsc">Рабби-дж‘аль хаза балядан аминан</div>
+            <div class="ru">Господи! Сделай этот город безопасным</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَارْزُقْ أَهْلَهُ مِنَ الثَّمَرَاتِ</div>
+            <div class="trsc">уарзукь ахляху мина-ссамарати</div>
+            <div class="ru">и надели плодами его жителей</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">مَنْ آمَنَ مِنْهُم بِاللَّهِ وَالْيَوْمِ الْآخِرِ</div>
+            <div class="trsc">ман амана минхум биллахи уаль-яуми-ль-ахир</div>
+            <div class="ru">которые уверовали в Аллаха и в Последний день</div>
+        </div>
+    </div>
+</div>
+
+<!-- 40. аль-Бакара 2:250 -->
+<div class="dua-section">
+    <div class="title">40. аль-Бакара 2:250</div>
+    <div class="source">Источник: Сура 2, аят 250</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">رَبَّنَا أَفْرِغْ عَلَيْنَا صَبْرًا</div>
+            <div class="trsc">Раббана афригъ ‘алейна сабран</div>
+            <div class="ru">Господь наш! Пролей на нас терпение</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَثَبِّتْ أَقْدَامَنَا</div>
+            <div class="trsc">уа саббит акдамана</div>
+            <div class="ru">укрепи наши стопы</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَانصُرْنَا عَلَى الْقَوْمِ الْكَافِرِينَ</div>
+            <div class="trsc">уансурна ‘аляль-кауми-ль-кафирин</div>
+            <div class="ru">и помоги нам одержать победу над неверующими людьми</div>
+        </div>
+    </div>
+</div>
+
+<!-- 41. ан-Ниса 4:75 -->
+<div class="dua-section">
+    <div class="title">41. ан-Ниса 4:75</div>
+    <div class="source">Источник: Сура 4, аят 75</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">رَبَّنَا أَخْرِجْنَا مِنْ هَذِهِ الْقَرْيَةِ الظَّالِمِ أَهْلُهَا</div>
+            <div class="trsc">Раббана ахриджна мин хазихи-ль-карьяти-ззалими ахлюха</div>
+            <div class="ru">Господь наш! Выведи нас из этого города, жители которого являются беззаконниками</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَاجْعَل لَّنَا مِن لَّدُنكَ وَلِيًّا</div>
+            <div class="trsc">уадж‘аль-ляна миль-лядунка уалийян</div>
+            <div class="ru">Назначь нам от Себя покровителя</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَاجْعَل لَّنَا مِن لَّدُنكَ نَصِيرًا</div>
+            <div class="trsc">уадж‘аль ляна миль-лядунка насыра</div>
+            <div class="ru">и назначь нам от Себя помощника</div>
+        </div>
+    </div>
+</div>
+
+<!-- 42. аль-А'раф 7:47 -->
+<div class="dua-section">
+    <div class="title">42. аль-А‘раф 7:47</div>
+    <div class="source">Источник: Сура 7, аят 47</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">رَبَّنَا لَا تَجْعَلْنَا مَعَ الْقَوْمِ الظَّالِمِينَ</div>
+            <div class="trsc">Раббана ля тадж‘альна ма‘аль-кауми-ззалимин</div>
+            <div class="ru">Господь наш! Не помещай нас с людьми несправедливыми</div>
+        </div>
+    </div>
+</div>
+
+<!-- 43. аль-А'раф 7:89 -->
+<div class="dua-section">
+    <div class="title">43. аль-А‘раф 7:89</div>
+    <div class="source">Источник: Сура 7, аят 89</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">رَبَّنَا افْتَحْ بَيْنَنَا وَبَيْنَ قَوْمِنَا بِالْحَقِّ</div>
+            <div class="trsc">Раббана-фтах байнана уа байна кауминна биль-хаккы</div>
+            <div class="ru">Господь наш! Рассуди между нами и нашим народом по истине</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَأَنتَ خَيْرُ الْفَاتِحِينَ</div>
+            <div class="trsc">уа анта хайруль-фатихин</div>
+            <div class="ru">ведь Ты — Наилучший из судий</div>
+        </div>
+    </div>
+</div>
+
+<!-- 44. аль-А'раф 7:126 -->
+<div class="dua-section">
+    <div class="title">44. аль-А‘раф 7:126</div>
+    <div class="source">Источник: Сура 7, аят 126</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">رَبَّنَا أَفْرِغْ عَلَيْنَا صَبْرًا</div>
+            <div class="trsc">Раббана афригъ ‘алейна сабран</div>
+            <div class="ru">Господь наш! Ниспошли нам терпение</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَتَوَفَّنَا مُسْلِمِينَ</div>
+            <div class="trsc">уа тауаффана муслимин</div>
+            <div class="ru">и упокой нас мусульманами</div>
+        </div>
+    </div>
+</div>
+
+<!-- 45. аль-А'раф 7:151 -->
+<div class="dua-section">
+    <div class="title">45. аль-А‘раф 7:151</div>
+    <div class="source">Источник: Сура 7, аят 151</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">رَبِّ اغْفِرْ لِي وَلِأَخِي</div>
+            <div class="trsc">Рабби-гфир ли уа ли ахи</div>
+            <div class="ru">Господи! Прости меня и моего брата</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَأَدْخِلْنَا فِي رَحْمَتِكَ</div>
+            <div class="trsc">уа адхильна фи рахматика</div>
+            <div class="ru">и введи нас в Свою милость</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَأَنتَ أَرْحَمُ الرَّاحِمِينَ</div>
+            <div class="trsc">уа анта архаму-ррахимин</div>
+            <div class="ru">ибо Ты — Милосерднейший из милосердных</div>
+        </div>
+    </div>
+</div>
+
+<!-- 46. Ибрахим 14:35-36 -->
+<div class="dua-section">
+    <div class="title">46. Ибрахим 14:35–36</div>
+    <div class="source">Источник: Сура 14, аяты 35–36</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">رَبِّ اجْعَلْ هَذَا الْبَلَدَ آمِنًا</div>
+            <div class="trsc">Рабби-дж‘аль хазаль-баляда аминан</div>
+            <div class="ru">Господи! Сделай этот город безопасным</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَاجْنُبْنِي وَبَنِيَّ أَن نَّعْبُدَ الْأَصْنَامَ</div>
+            <div class="trsc">уаджнубни уа банийя ан-на‘будаль-аснам</div>
+            <div class="ru">и убереги меня и моих сыновей от поклонения идолам</div>
+        </div>
+    </div>
+</div>
+
+<!-- 47. аль-Касас 28:21 -->
+<div class="dua-section">
+    <div class="title">47. аль-Касас 28:21</div>
+    <div class="source">Источник: Сура 28, аят 21</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">رَبِّ نَجِّنِي مِنَ الْقَوْمِ الظَّالِمِينَ</div>
+            <div class="trsc">Рабби надджини миналь-кауми-ззалимин</div>
+            <div class="ru">Господи! Спаси меня от несправедливых людей</div>
+        </div>
+    </div>
+</div>
+
+<!-- 48. аль-Касас 28:24 -->
+<div class="dua-section">
+    <div class="title">48. аль-Касас 28:24</div>
+    <div class="source">Источник: Сура 28, аят 24</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">رَبِّ إِنِّي لِمَا أَنزَلْتَ إِلَيَّ مِنْ خَيْرٍ فَقِيرٌ</div>
+            <div class="trsc">Рабби инни лима анзальта илейя мин хайрин факир</div>
+            <div class="ru">Господи! Воистину, я нуждаюсь в любом благе, которое Ты ниспошлёшь мне</div>
+        </div>
+    </div>
+</div>
+
+<!-- 49. ад-Духан 44:12 -->
+<div class="dua-section">
+    <div class="title">49. ад-Духан 44:12</div>
+    <div class="source">Источник: Сура 44, аят 12</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">رَبَّنَا اكْشِفْ عَنَّا الْعَذَابَ إِنَّا مُؤْمِنُونَ</div>
+            <div class="trsc">Раббана-кшиф ‘анналь-‘азаба инна му‘минун</div>
+            <div class="ru">Господь наш! Избавь нас от страданий, ведь мы уверовали</div>
+        </div>
+    </div>
+</div>
+
+<!-- 50. ат-Тахрим 66:11 -->
+<div class="dua-section">
+    <div class="title">50. ат-Тахрим 66:11</div>
+    <div class="source">Источник: Сура 66, аят 11</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">رَبِّ ابْنِ لِي عِندَكَ بَيْتًا فِي الْجَنَّةِ</div>
+            <div class="trsc">Рабби-бни ли ‘индака байтан филь-джаннати</div>
+            <div class="ru">Господи! Возведи для меня дом в Раю возле Тебя</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَنَجِّنِي مِنَ الْقَوْمِ الظَّالِمِينَ</div>
+            <div class="trsc">уа надджини миналь-кауми-ззалимин</div>
+            <div class="ru">и спаси меня от несправедливых людей</div>
+        </div>
+    </div>
+</div>
+
+<!-- 51. Нух 71:26-27 -->
+<div class="dua-section">
+    <div class="title">51. Нух 71:26–27</div>
+    <div class="source">Источник: Сура 71, аяты 26–27</div>
+    <div class="wrapper">
+        <div class="fragment">
+            <div class="ar">رَبِّ لَا تَذَرْ عَلَى الْأَرْضِ مِنَ الْكَافِرِينَ دَيَّارًا</div>
+            <div class="trsc">Рабби ля тазар ‘аляль-арди миналь-кафирина дайяра</div>
+            <div class="ru">Господи! Не оставь на земле ни одного неверующего жителя</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">إِنَّكَ إِن تَذَرْهُمْ يُضِلُّوا عِبَادَكَ</div>
+            <div class="trsc">иннака ин тазархум юдыллю ‘ибадака</div>
+            <div class="ru">Если Ты оставишь их, они введут в заблуждение Твоих рабов</div>
+        </div>
+        <div class="fragment">
+            <div class="ar">وَلَا يَلِدُوا إِلَّا فَاجِرًا كَفَّارًا</div>
+            <div class="trsc">уа ля ялиду илля фаджиран каффара</div>
+            <div class="ru">и породят только грешных неверующих</div>
+        </div>
+    </div>
+</div>
+
+
+</body>
+</html>
