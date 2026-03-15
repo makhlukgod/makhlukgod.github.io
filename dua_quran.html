@@ -12,10 +12,13 @@
             color: #222; 
             padding: 0;
             line-height: 1.6;
+            margin-bottom: 100px; /* отступ для фиксированной панели */
         }
         .dua-section {
             max-width: 900px;
             margin: 0 auto 30px auto;
+            padding: 10px 5px;
+            line-height: 1.5em;
             background-color: #ffffff;
             border-radius: 20px;
             box-shadow: 0 6px 18px rgba(0,0,0,0.05); 
@@ -23,6 +26,7 @@
         .title {
             font-size: 1.6rem;
             font-weight: 600;
+            text-align: center;
             color: #2c5f2d;
             border-bottom: 2px solid #d4af37;
             padding-bottom: 8px;
@@ -50,19 +54,20 @@
         /* КАЖДЫЙ БЛОК - ширина по арабскому тексту */
         .fragment {
             font-size: 33px;
-            width: min-content;  /* блок сужается до минимальной ширины контента */
-            max-width: min-content; /* или так, если нужен только верхний предел */ 
+            width: min-content;
+            max-width: min-content; 
         }
         
         /* Арабский - запрет переноса */
         .ar {
-  	        
-                font-family: 'Scheherazade', 'Times New Roman', serif;
-                line-height: 1.2em;
-    		white-space: nowrap;
-    		direction: rtl;
-   		text-align: center;
-    		color: #1e3c72;
+            font-family: 'Scheherazade', 'Times New Roman', serif;
+            line-height: 1.4em;
+            white-space: nowrap;
+            direction: rtl;
+            text-align: center;
+            color: #1e3c72;
+            font-size: var(--ar-size, 33px);
+            display: var(--ar-display, block);
         }
         
         /* Русский - принудительный перенос */
@@ -71,12 +76,12 @@
             overflow-wrap: normal;
             word-break: normal;
             hyphens: none;
-		
+            direction: ltr;
             max-width: 100%; 
-            font-size: 0.4em;
+            font-size: var(--ru-size, 0.4em);
             line-height: 0.9em;
             text-align: center;   
-            display: block;
+            display: var(--ru-display, block);
         }
         .trsc {
             white-space: normal;
@@ -84,415 +89,186 @@
             word-break: normal;
             hyphens: none;
             max-width: 100%; 
-            font-size: 0.4em;
+            font-size: var(--trsc-size, 0.4em);
+            direction: ltr;
             line-height: 0.9em;
             text-align: center;  
-                color: #8f8f8f; 
-            display: block;
+            color: #8f8f8f; 
+            display: var(--trsc-display, block);
             font-family: 'Courier New', monospace;
         }
-        
-    </style>
-<script>
-// Функция для создания и управления настройками текста
-function createTextSettings() {
-    // Создаем контейнер для кнопки настроек, если его нет
-    let settingsBtn = document.getElementById('textSettingsBtn');
-    if (!settingsBtn) {
-        settingsBtn = document.createElement('button');
-        settingsBtn.id = 'textSettingsBtn';
-        settingsBtn.textContent = '⚙️';
-        settingsBtn.style.cssText = `
-            position: fixed;
-            top: 2px;
-            right: 2px;
-            background: #0b5e42;
-            color: white;
-            border: none;
-            padding: 1px 2px;
-            border-radius: 40px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            z-index: 10000;
-            border: 2px solid #c4a747;
-            transition: 0.2s;
-        `;
-        settingsBtn.addEventListener('mouseenter', () => {
-            settingsBtn.style.backgroundColor = '#1a7a5a';
-        });
-        settingsBtn.addEventListener('mouseleave', () => {
-            settingsBtn.style.backgroundColor = '#0b5e42';
-        });
-        document.body.appendChild(settingsBtn);
-    }
 
-    // Создаем модальное окно настроек
-    let modal = document.getElementById('textSettingsModal');
-    if (!modal) {
-        modal = document.createElement('div');
-        modal.id = 'textSettingsModal';
-        modal.style.cssText = `
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
-            z-index: 10001;
-            width: 350px;
-            max-width: 90vw;
-            border: 3px solid #c4a747;
-        `;
-        
-        // Заголовок
-        const title = document.createElement('h3');
-        title.textContent = 'Настройки отображения';
-        title.style.cssText = `
-            margin-top: 0;
-            margin-bottom: 25px;
-            color: #0b5e42;
-            border-bottom: 2px solid #c4a747;
-            padding-bottom: 10px;
-            font-size: 1.5rem;
-        `;
-        modal.appendChild(title);
-
-        // Размер арабского текста
-        const arabicLabel = document.createElement('label');
-        arabicLabel.textContent = 'Размер арабского текста:';
-        arabicLabel.style.cssText = `
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #2c3e50;
-        `;
-        modal.appendChild(arabicLabel);
-
-        const arabicSlider = document.createElement('input');
-        arabicSlider.type = 'range';
-        arabicSlider.id = 'arabicSizeSlider';
-        arabicSlider.min = '16';
-        arabicSlider.max = '48';
-        arabicSlider.value = '32';
-        arabicSlider.style.cssText = `
-            width: 100%;
-            margin-bottom: 5px;
-        `;
-        modal.appendChild(arabicSlider);
-
-        const arabicSizeValue = document.createElement('div');
-        arabicSizeValue.id = 'arabicSizeValue';
-        arabicSizeValue.textContent = '32px';
-        arabicSizeValue.style.cssText = `
-            text-align: right;
-            margin-bottom: 20px;
-            color: #0b5e42;
-            font-weight: 500;
-        `;
-        modal.appendChild(arabicSizeValue);
-
-        // Размер транскрипции
-        const transLabel = document.createElement('label');
-        transLabel.textContent = 'Размер транскрипции:';
-        transLabel.style.cssText = `
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #2c3e50;
-        `;
-        modal.appendChild(transLabel);
-
-        const transSlider = document.createElement('input');
-        transSlider.type = 'range';
-        transSlider.id = 'transSizeSlider';
-        transSlider.min = '12';
-        transSlider.max = '30';
-        transSlider.value = '16';
-        transSlider.style.cssText = `
-            width: 100%;
-            margin-bottom: 5px;
-        `;
-        modal.appendChild(transSlider);
-
-        const transSizeValue = document.createElement('div');
-        transSizeValue.id = 'transSizeValue';
-        transSizeValue.textContent = '16px';
-        transSizeValue.style.cssText = `
-            text-align: right;
-            margin-bottom: 20px;
-            color: #0b5e42;
-            font-weight: 500;
-        `;
-        modal.appendChild(transSizeValue);
-
-        // Размер перевода
-        const ruLabel = document.createElement('label');
-        ruLabel.textContent = 'Размер перевода:';
-        ruLabel.style.cssText = `
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #2c3e50;
-        `;
-        modal.appendChild(ruLabel);
-
-        const ruSlider = document.createElement('input');
-        ruSlider.type = 'range';
-        ruSlider.id = 'ruSizeSlider';
-        ruSlider.min = '12';
-        ruSlider.max = '30';
-        ruSlider.value = '18';
-        ruSlider.style.cssText = `
-            width: 100%;
-            margin-bottom: 5px;
-        `;
-        modal.appendChild(ruSlider);
-
-        const ruSizeValue = document.createElement('div');
-        ruSizeValue.id = 'ruSizeValue';
-        ruSizeValue.textContent = '18px';
-        ruSizeValue.style.cssText = `
-            text-align: right;
-            margin-bottom: 25px;
-            color: #0b5e42;
-            font-weight: 500;
-        `;
-        modal.appendChild(ruSizeValue);
-
-        // Переключатели видимости
-        const toggleGroup = document.createElement('div');
-        toggleGroup.style.cssText = `
-            border-top: 2px solid #c4a747;
-            padding-top: 20px;
-            margin-bottom: 25px;
-        `;
-
-        // Чекбокс транскрипции
-        const transCheckDiv = document.createElement('div');
-        transCheckDiv.style.marginBottom = '15px';
-        
-        const transCheck = document.createElement('input');
-        transCheck.type = 'checkbox';
-        transCheck.id = 'showTrans';
-        transCheck.checked = true;
-        transCheck.style.marginRight = '10px';
-        transCheck.style.width = '18px';
-        transCheck.style.height = '18px';
-        
-        const transCheckLabel = document.createElement('label');
-        transCheckLabel.htmlFor = 'showTrans';
-        transCheckLabel.textContent = 'Показывать транскрипцию';
-        transCheckLabel.style.fontWeight = '600';
-        transCheckLabel.style.color = '#2c3e50';
-        
-        transCheckDiv.appendChild(transCheck);
-        transCheckDiv.appendChild(transCheckLabel);
-        toggleGroup.appendChild(transCheckDiv);
-
-        // Чекбокс перевода
-        const ruCheckDiv = document.createElement('div');
-        ruCheckDiv.style.marginBottom = '15px';
-        
-        const ruCheck = document.createElement('input');
-        ruCheck.type = 'checkbox';
-        ruCheck.id = 'showRu';
-        ruCheck.checked = true;
-        ruCheck.style.marginRight = '10px';
-        ruCheck.style.width = '18px';
-        ruCheck.style.height = '18px';
-        
-        const ruCheckLabel = document.createElement('label');
-        ruCheckLabel.htmlFor = 'showRu';
-        ruCheckLabel.textContent = 'Показывать перевод';
-        ruCheckLabel.style.fontWeight = '600';
-        ruCheckLabel.style.color = '#2c3e50';
-        
-        ruCheckDiv.appendChild(ruCheck);
-        ruCheckDiv.appendChild(ruCheckLabel);
-        toggleGroup.appendChild(ruCheckDiv);
-
-        modal.appendChild(toggleGroup);
-
-        // Кнопки управления
-        const btnGroup = document.createElement('div');
-        btnGroup.style.cssText = `
-            display: flex;
-            gap: 15px;
-            justify-content: flex-end;
-        `;
-
-        const saveBtn = document.createElement('button');
-        saveBtn.textContent = 'Сохранить';
-        saveBtn.style.cssText = `
-            background: #0b5e42;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 30px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            flex: 1;
-        `;
-
-        const closeBtn = document.createElement('button');
-        closeBtn.textContent = 'Закрыть';
-        closeBtn.style.cssText = `
-            background: #e0e0e0;
-            color: #333;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 30px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            flex: 1;
-        `;
-
-        btnGroup.appendChild(saveBtn);
-        btnGroup.appendChild(closeBtn);
-        modal.appendChild(btnGroup);
-
-        document.body.appendChild(modal);
-
-        // Overlay
-        const overlay = document.createElement('div');
-        overlay.id = 'settingsOverlay';
-        overlay.style.cssText = `
+        /* Затемнение фона */
+        .modal-overlay {
             display: none;
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 10000;
-        `;
-        document.body.appendChild(overlay);
-
-        // Функции открытия/закрытия
-        function openModal() {
-            modal.style.display = 'block';
-            overlay.style.display = 'block';
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1001;
+            justify-content: center;
+            align-items: center;
         }
 
-        function closeModal() {
-            modal.style.display = 'none';
-            overlay.style.display = 'none';
+        /* Окно настроек */
+        .settings-modal {
+            background-color: white;
+            padding: 25px;
+            border-radius: 30px;
+            width: 90%;
+            max-width: 350px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
         }
 
-        // Обработчики
-        settingsBtn.addEventListener('click', openModal);
-        closeBtn.addEventListener('click', closeModal);
-        overlay.addEventListener('click', closeModal);
-
-        // Обновление отображаемых значений
-        arabicSlider.addEventListener('input', () => {
-            arabicSizeValue.textContent = arabicSlider.value + 'px';
-        });
-
-        transSlider.addEventListener('input', () => {
-            transSizeValue.textContent = transSlider.value + 'px';
-        });
-
-        ruSlider.addEventListener('input', () => {
-            ruSizeValue.textContent = ruSlider.value + 'px';
-        });
-
-        // Загрузка сохраненных настроек
-        function loadSettings() {
-            const savedArabic = localStorage.getItem('arabicFontSize');
-            const savedTrans = localStorage.getItem('transFontSize');
-            const savedRu = localStorage.getItem('ruFontSize');
-            const savedShowTrans = localStorage.getItem('showTrans');
-            const savedShowRu = localStorage.getItem('showRu');
-
-            if (savedArabic) {
-                arabicSlider.value = savedArabic;
-                arabicSizeValue.textContent = savedArabic + 'px';
-            }
-            if (savedTrans) {
-                transSlider.value = savedTrans;
-                transSizeValue.textContent = savedTrans + 'px';
-            }
-            if (savedRu) {
-                ruSlider.value = savedRu;
-                ruSizeValue.textContent = savedRu + 'px';
-            }
-            if (savedShowTrans !== null) {
-                transCheck.checked = savedShowTrans === 'true';
-            }
-            if (savedShowRu !== null) {
-                ruCheck.checked = savedShowRu === 'true';
-            }
-
-            applySettings();
+        .settings-modal h3 {
+            margin-top: 0;
+            color: #2c5f2d;
+            text-align: center;
+            border-bottom: 2px solid #d4af37;
+            padding-bottom: 10px;
         }
 
-        // Применение настроек
-        function applySettings() {
-            // Размеры
-            document.querySelectorAll('.ar').forEach(el => {
-                el.style.fontSize = arabicSlider.value + 'px';
-            });
-            document.querySelectorAll('.trsc').forEach(el => {
-                el.style.fontSize = transSlider.value + 'px';
-            });
-            document.querySelectorAll('.ru').forEach(el => {
-                el.style.fontSize = ruSlider.value + 'px';
-            });
-
-            // Видимость
-            document.querySelectorAll('.trsc').forEach(el => {
-                el.style.display = transCheck.checked ? 'block' : 'none';
-            });
-            document.querySelectorAll('.ru').forEach(el => {
-                el.style.display = ruCheck.checked ? 'block' : 'none';
-            });
-
-            // Сохраняем
-            localStorage.setItem('arabicFontSize', arabicSlider.value);
-            localStorage.setItem('transFontSize', transSlider.value);
-            localStorage.setItem('ruFontSize', ruSlider.value);
-            localStorage.setItem('showTrans', transCheck.checked);
-            localStorage.setItem('showRu', ruCheck.checked);
+        .setting-item {
+            margin-bottom: 20px;
         }
 
-        saveBtn.addEventListener('click', () => {
-            applySettings();
-            closeModal();
-        });
+        .setting-item label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #444;
+        }
 
-        // Загружаем настройки при старте
-        loadSettings();
+        .setting-item input[type="range"] {
+            width: 100%;
+            margin: 5px 0;
+        }
 
-        // Добавляем наблюдатель для новых элементов
-        const observer = new MutationObserver(() => {
-            applySettings();
-        });
-        observer.observe(document.body, { childList: true, subtree: true });
-    }
-}
+        .checkbox-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
 
-// Запускаем после загрузки DOM
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', createTextSettings);
-} else {
-    createTextSettings();
-}
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: normal;
+        }
 
-// Экспортируем функцию на случай ручного вызова
-window.createTextSettings = createTextSettings;
-</script>
+        .close-btn {
+            background-color: #2c5f2d;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 30px;
+            width: 100%;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background-color 0.2s;
+        }
+
+        .close-btn:hover {
+            background-color: #1e4620;
+        }
+
+        .value-display {
+            float: right;
+            color: #2c5f2d;
+            font-weight: 600;
+        }
+
+        /* Закреплённая нижняя панель */
+        .nav {
+            display: flex;
+            justify-content: center;
+        }
+
+        .bottom-nav { 
+            position: fixed;
+            bottom: 0; 
+            width: 245px;
+            background-color: #ffffff;
+            border-radius: 20px 20px 0 0;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+            padding: 5px 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(0,0,0,0.03);
+            border-bottom: none;
+            z-index: 1000;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center; 
+            color: #a0a0a0;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            text-decoration: none;
+            flex: 1;
+            max-width: 80px;
+        }
+
+        .nav-item:hover {
+            color: #666;
+            transform: translateY(-2px);
+        }
+
+        .nav-item .icon {
+            width: 24px;
+            height: 24px;   
+            transition: transform 0.2s ease;
+        }
+        
+        .nav-item.active {
+            color: #000000;
+            fill: #000;
+        }
+
+        .nav-item:not(.active) {
+            color: #b0b0b0;
+            fill: #b0b0b0;
+        }
+
+        @media (max-width: 400px) {
+            .bottom-nav {
+                padding: 10px 16px;
+            }
+            .nav-item {
+                font-size: 12px;
+            }
+            .nav-item .icon {
+                width: 22px;
+                height: 22px;
+            }
+        }
+
+        @supports (padding-bottom: env(safe-area-inset-bottom)) {
+            .bottom-nav {
+                
+            }
+        }
+    </style>
 </head>
 <body>
-
-    
 <!-- 1. аль-А'раф 7:23 -->
 <div class="dua-section">
     <div class="title">1. аль-А‘раф 7:23</div>
@@ -1567,5 +1343,287 @@ window.createTextSettings = createTextSettings;
 </div>
 
 
+
+    <!-- Модальное окно настроек -->
+    <div class="modal-overlay" id="settingsModal">
+        <div class="settings-modal">
+            <h3>Настройки текста</h3>
+            
+            <div class="setting-item">
+                <label>Арабский текст <span class="value-display" id="arSizeValue">33px</span></label>
+                <input type="range" id="arSize" min="16" max="60" value="33" step="1">
+            </div>
+            
+            <div class="setting-item">
+                <label>Транскрипция <span class="value-display" id="trscSizeValue">0.4em</span></label>
+                <input type="range" id="trscSize" min="0.2" max="1" value="0.4" step="0.05">
+            </div>
+            
+            <div class="setting-item">
+                <label>Перевод <span class="value-display" id="ruSizeValue">0.4em</span></label>
+                <input type="range" id="ruSize" min="0.2" max="1" value="0.4" step="0.05">
+            </div>
+            
+            <div class="setting-item">
+                <label>Отображение элементов:</label>
+                <div class="checkbox-group">
+                    <label>
+                        <input type="checkbox" id="showAr" checked> Арабский
+                    </label>
+                    <label>
+                        <input type="checkbox" id="showTrsc" checked> Транскрипция
+                    </label>
+                    <label>
+                        <input type="checkbox" id="showRu" checked> Перевод
+                    </label>
+                </div>
+            </div>
+            
+            <button class="close-btn" id="closeSettings">Готово</button>
+        </div>
+    </div>
+
+   
+<div class="nav">
+<div class="bottom-nav">
+         
+<a href="/dua_quran.html" style="text-decoration: none;">        <div class="nav-item quran">
+            <span class="icon">
+<svg version="1.0" xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 512.000000 512.000000"
+ preserveAspectRatio="xMidYMid meet">
+
+<g transform="translate(0.000000,512.000000) scale(0.100000,-0.100000)"
+ stroke="none">
+<path d="M993 5106 c-127 -31 -264 -137 -325 -252 -62 -115 -58 23 -58 -2189
+0 -1719 2 -2028 15 -2074 37 -142 136 -262 266 -324 89 -43 167 -57 334 -57
+l121 0 11 -42 c18 -67 52 -110 112 -140 68 -35 99 -35 222 -2 l98 27 105 -27
+c117 -29 135 -30 189 -15 71 19 146 110 147 176 l0 23 1096 2 1096 3 25 29
+c20 24 24 36 19 65 -11 71 83 65 -1134 71 l-1097 5 -3 122 -3 123 1011 0 1012
+0 29 29 29 29 0 181 0 180 48 21 c62 28 99 64 128 125 l24 50 0 1831 c0 2038
+5 1885 -69 1962 -20 21 -55 47 -76 57 -39 20 -71 20 -1333 23 l-1293 2 -30
+-29 c-38 -38 -38 -74 0 -112 l29 -29 1267 0 c1307 0 1292 0 1322 -39 10 -12
+12 -419 13 -1827 0 -1769 0 -1812 -19 -1835 l-19 -24 -1639 -5 -1638 -5 -67
+-23 c-36 -12 -90 -38 -118 -57 -29 -19 -54 -35 -56 -35 -2 0 -3 811 -2 1803
+l3 1802 22 47 c46 100 148 177 256 193 l47 7 0 -1654 c0 -1648 0 -1654 20
+-1676 41 -44 116 -36 139 14 8 18 11 483 11 1725 l0 1701 -29 29 c-28 28 -33
+29 -118 28 -48 0 -111 -6 -140 -13z m3145 -4183 l3 -123 -1426 0 -1427 0 -29
+-29 c-38 -38 -38 -74 0 -112 l29 -29 386 0 386 0 0 -219 c0 -184 -2 -221 -15
+-231 -13 -11 -37 -7 -136 19 l-120 32 -109 -31 c-60 -16 -114 -30 -119 -30
+-26 0 -41 34 -41 95 0 47 -5 69 -19 86 -19 24 -23 24 -238 30 -256 7 -300 18
+-381 97 -74 72 -97 128 -97 237 0 84 2 94 34 153 51 94 134 154 238 172 27 4
+730 7 1563 6 l1515 -1 3 -122z"/>
+<path d="M2745 4675 c-21 -20 -25 -34 -25 -80 0 -43 -3 -55 -16 -55 -31 0
+-129 -56 -175 -101 -26 -25 -59 -69 -73 -96 -32 -64 -65 -90 -124 -99 -163
+-23 -297 -131 -338 -270 -14 -48 -18 -52 -52 -59 -96 -18 -202 -95 -255 -186
+-55 -93 -57 -120 -57 -660 0 -294 4 -518 10 -550 28 -146 147 -273 293 -310
+42 -10 47 -15 61 -56 50 -145 176 -253 316 -270 66 -8 106 -35 143 -98 42 -72
+113 -141 181 -175 33 -17 65 -30 73 -30 9 0 13 -14 13 -46 0 -73 30 -113 86
+-114 21 0 40 9 58 26 22 22 26 36 26 80 0 39 4 54 13 54 30 0 136 63 177 104
+24 24 58 68 75 98 39 66 78 93 145 101 139 17 270 127 315 265 16 47 19 51 63
+62 114 28 230 129 274 237 23 58 23 60 26 574 2 338 -1 525 -8 543 -13 35 -69
+60 -104 47 -57 -22 -56 -12 -56 -544 0 -323 -4 -503 -11 -532 -14 -55 -70
+-122 -123 -146 -23 -10 -63 -19 -89 -19 -54 0 -103 -21 -110 -47 -3 -10 -8
+-40 -12 -68 -16 -119 -91 -191 -220 -210 -97 -14 -186 -80 -234 -172 -90 -175
+-309 -178 -408 -4 -59 104 -141 162 -254 180 -110 18 -178 83 -199 189 -6 31
+-13 67 -16 79 -6 30 -53 53 -109 53 -84 0 -155 45 -198 125 -22 39 -22 49 -25
+544 -3 560 -1 577 60 640 45 46 93 67 166 74 84 7 107 28 117 105 15 123 89
+199 210 217 109 15 182 68 246 176 52 90 114 129 204 129 90 0 152 -39 204
+-129 64 -108 137 -161 246 -176 120 -18 195 -95 211 -216 8 -67 34 -99 81 -99
+76 0 101 44 84 144 -32 181 -142 297 -317 333 -98 20 -118 33 -157 102 -17 31
+-52 77 -77 102 -43 43 -141 99 -174 99 -13 0 -16 12 -16 55 0 46 -4 60 -25 80
+-33 34 -87 34 -120 0z"/>
+<path d="M2759 3847 c-46 -35 -50 -88 -10 -128 25 -24 38 -29 79 -29 69 0 192
+-34 265 -72 97 -51 206 -166 255 -269 51 -105 66 -182 60 -301 -8 -151 -62
+-276 -166 -385 -158 -165 -402 -227 -618 -159 -253 81 -423 314 -424 581 0
+147 58 298 155 403 59 64 71 94 56 135 -14 35 -70 61 -104 48 -44 -17 -143
+-138 -191 -234 -69 -136 -89 -232 -83 -381 5 -136 22 -209 72 -311 100 -205
+288 -358 510 -416 103 -27 260 -29 365 -4 264 61 476 256 566 520 21 64 28
+105 32 201 6 156 -12 243 -80 383 -44 92 -61 115 -141 195 -95 94 -163 141
+-267 183 -114 45 -295 68 -331 40z"/>
+</g>
+</svg></span>
+            <span class="label">из Корана</span>
+        </div>
+</a>        
+        <!-- hadis-->
+ <a href="/dua.html" style="text-decoration: none;">       <div class="nav-item hadis active">
+            <span class="icon">
+<svg version="1.0" xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 512.000000 512.000000"
+ preserveAspectRatio="xMidYMid meet">
+
+<g transform="translate(0.000000,512.000000) scale(0.100000,-0.100000)"
+  stroke="none">
+<path d="M1845 4360 c-891 -124 -1424 -203 -1449 -214 -52 -22 -121 -79 -153
+-127 -56 -85 -76 -162 -80 -319 -7 -224 34 -387 129 -511 l36 -46 -107 -33
+c-58 -18 -114 -39 -123 -48 -44 -38 3 -100 102 -136 124 -45 186 -208 172
+-457 l-4 -75 -102 -33 c-231 -76 -324 -142 -229 -165 15 -4 45 -12 66 -17 l38
+-10 -29 -37 c-66 -83 -100 -183 -109 -318 -10 -156 24 -349 82 -464 29 -58 98
+-136 139 -157 17 -9 456 -155 975 -324 l944 -308 1399 339 c769 187 1403 342
+1408 345 18 11 10 33 -20 58 -31 27 -137 71 -256 107 l-71 21 -7 46 c-18 135
+3 296 50 383 31 58 69 89 137 115 63 24 97 56 97 93 0 35 -11 45 -65 61 -22 7
+-46 14 -52 16 -7 3 7 25 35 53 103 106 151 246 159 469 8 193 -14 290 -87 399
+l-20 32 131 32 c133 33 153 46 128 77 -20 24 -137 76 -256 113 l-101 32 -4 72
+c-5 117 8 246 32 310 28 73 88 136 150 156 88 29 135 95 93 132 -16 14 -1741
+540 -1761 537 -4 -1 -641 -90 -1417 -199z m-442 -697 c502 -163 914 -298 916
+-300 6 -4 -14 -601 -20 -607 -3 -4 -421 110 -928 252 -704 198 -927 264 -945
+281 -13 12 -35 44 -50 70 -73 135 -76 443 -4 543 21 31 68 57 101 58 10 0 429
+-134 930 -297z m3293 128 c-35 -68 -48 -160 -44 -326 l3 -159 -1123 -279
+c-618 -153 -1125 -277 -1126 -276 -3 4 15 602 18 606 3 3 2281 470 2284 467 2
+-1 -4 -16 -12 -33z m-2 -805 c71 -29 106 -127 106 -292 0 -167 -39 -302 -106
+-365 -17 -16 -250 -85 -945 -280 -508 -142 -925 -256 -928 -253 -6 6 -26 603
+-20 608 12 9 1818 594 1837 595 12 1 38 -5 56 -13z m-3124 -356 c618 -127
+1125 -232 1126 -233 3 -4 21 -602 18 -606 -1 -2 -508 123 -1125 276 l-1122
+280 -1 189 c-1 194 -3 207 -51 318 -7 15 -5 17 11 12 10 -3 525 -109 1144
+-236z m-322 -886 c499 -163 910 -299 914 -302 5 -6 -10 -603 -16 -610 -2 -1
+-419 114 -926 257 l-924 259 -37 39 c-49 53 -78 136 -91 264 -20 187 15 329
+92 370 19 11 45 19 58 19 13 0 431 -133 930 -296z m3275 80 c-26 -75 -28 -88
+-28 -258 l0 -179 -1119 -279 c-616 -153 -1121 -276 -1124 -273 -6 6 13 593 20
+600 3 3 112 28 242 54 188 39 243 48 269 40 29 -8 55 -2 158 32 87 28 347 86
+864 193 407 84 741 152 743 151 1 -1 -10 -38 -25 -81z"/>
+</g>
+</svg>
+</span>
+            <span class="label">из хадисов</span>
+        </div>
+</a>
+            <div class="nav-item setting" id="settingsButton">
+                <span class="icon">
+                    <svg version="1.0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512.000000 512.000000" preserveAspectRatio="xMidYMid meet">
+                        <g transform="translate(0.000000,512.000000) scale(0.100000,-0.100000)" stroke="none">
+                            <path d="M2047 5109 c-124 -30 -241 -134 -282 -250 -9 -23 -28 -119 -44 -214 -39 -230 -74 -296 -189 -352 -46 -22 -69 -27 -127 -27 -61 1 -90 9 -235 65 -164 63 -165 63 -270 64 -97 0 -110 -2 -170 -31 -36 -17 -85 -51 -110 -77 -53 -54 -493 -807 -523 -897 -26 -76 -19 -197 15 -272 37 -78 73 -118 215 -234 70 -58 138 -119 151 -134 86 -109 88 -268 3 -376 -11 -14 -80 -75 -153 -136 -145 -119 -177 -155 -215 -236 -35 -75 -42 -196 -17 -272 11 -30 122 -234 249 -453 250 -434 275 -468 385 -521 60 -29 73 -31 170 -31 105 1 106 1 270 64 145 56 174 64 235 65 117 1 211 -58 266 -166 13 -25 32 -108 50 -213 32 -193 45 -236 88 -299 42 -61 95 -104 171 -140 l65 -31 484 -3 c306 -2 502 1 533 7 121 26 218 102 273 214 28 59 40 104 64 248 32 196 54 254 117 309 60 52 118 74 199 73 62 0 90 -8 235 -64 164 -63 165 -63 270 -64 97 0 110 2 170 31 109 53 135 88 383 516 124 216 234 411 244 433 13 29 17 67 18 140 0 87 -3 107 -26 155 -39 81 -72 118 -220 240 -143 119 -180 164 -204 243 -19 63 -19 91 0 154 24 80 63 127 204 243 146 120 181 159 220 240 23 48 26 68 26 155 -1 73 -5 111 -18 140 -10 22 -120 217 -244 433 -248 428 -274 463 -383 516 -60 29 -73 31 -170 31 -105 -1 -106 -1 -270 -64 -145 -56 -174 -64 -235 -65 -117 -1 -211 58 -266 166 -12 24 -32 108 -50 211 -15 94 -36 192 -46 219 -34 96 -129 191 -230 233 -45 19 -76 20 -543 22 -272 1 -512 -3 -533 -8z m933 -391 c0 -2 13 -80 30 -175 43 -248 92 -356 219 -479 141 -138 346 -214 531 -199 97 8 124 15 308 82 84 31 154 54 155 52 2 -2 97 -166 211 -363 165 -287 204 -362 194 -371 -7 -6 -64 -53 -125 -104 -144 -118 -202 -184 -252 -285 -56 -111 -74 -189 -74 -316 0 -127 18 -205 74 -316 50 -101 108 -167 252 -285 61 -51 118 -98 125 -104 10 -9 -30 -85 -194 -371 -114 -197 -209 -361 -211 -363 -1 -2 -71 21 -155 52 -184 67 -211 74 -308 82 -185 15 -391 -62 -532 -198 -125 -123 -176 -233 -218 -480 -17 -95 -30 -173 -30 -174 0 -2 -189 -3 -420 -3 -231 0 -420 1 -420 3 0 1 -13 79 -30 174 -42 247 -91 353 -217 478 -140 138 -347 215 -533 200 -97 -8 -124 -15 -308 -82 -84 -31 -154 -54 -155 -52 -31 39 -415 724 -410 729 4 4 62 52 128 107 140 116 193 173 243 263 60 107 84 206 84 340 0 134 -24 233 -84 340 -50 90 -103 147 -243 263 -66 55 -124 103 -128 107 -5 5 379 690 410 729 1 2 71 -21 155 -52 207 -76 227 -80 348 -81 125 0 202 18 315 74 91 45 160 98 227 177 91 108 134 216 168 423 11 69 23 137 26 153 l6 27 419 0 c230 0 419 -1 419 -2z"/>
+                            <path d="M2435 3539 c-140 -18 -304 -81 -434 -167 -73 -48 -206 -182 -256 -257 -228 -346 -228 -764 0 -1110 50 -75 183 -209 256 -257 381 -251 848 -229 1191 56 301 249 427 671 311 1041 -111 356 -403 618 -761 685 -82 15 -230 20 -307 9z m300 -420 c175 -54 329 -209 387 -389 29 -91 29 -249 0 -340 -59 -182 -210 -333 -392 -391 -92 -30 -240 -30 -335 -1 -185 57 -338 208 -397 392 -29 91 -29 249 1 340 69 217 269 385 491 413 59 8 182 -4 245 -24z"/>
+                        </g>
+                    </svg>
+                </span>
+                <span class="label">Настройки</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Получаем элементы
+        const modal = document.getElementById('settingsModal');
+        const settingsBtn = document.getElementById('settingsButton');
+        const closeBtn = document.getElementById('closeSettings');
+        
+        // Элементы управления
+        const arSizeInput = document.getElementById('arSize');
+        const trscSizeInput = document.getElementById('trscSize');
+        const ruSizeInput = document.getElementById('ruSize');
+        const showArCheck = document.getElementById('showAr');
+        const showTrscCheck = document.getElementById('showTrsc');
+        const showRuCheck = document.getElementById('showRu');
+        
+        // Дисплеи значений
+        const arSizeValue = document.getElementById('arSizeValue');
+        const trscSizeValue = document.getElementById('trscSizeValue');
+        const ruSizeValue = document.getElementById('ruSizeValue');
+
+        // Корневой элемент для CSS переменных
+        const root = document.documentElement;
+
+        // Функции обновления
+        function updateArSize() {
+            const val = arSizeInput.value + 'px';
+            root.style.setProperty('--ar-size', val);
+            arSizeValue.textContent = val;
+        }
+
+        function updateTrscSize() {
+            const val = trscSizeInput.value + 'em';
+            root.style.setProperty('--trsc-size', val);
+            trscSizeValue.textContent = val;
+        }
+
+        function updateRuSize() {
+            const val = ruSizeInput.value + 'em';
+            root.style.setProperty('--ru-size', val);
+            ruSizeValue.textContent = val;
+        }
+
+        function updateVisibility() {
+            root.style.setProperty('--ar-display', showArCheck.checked ? 'block' : 'none');
+            root.style.setProperty('--trsc-display', showTrscCheck.checked ? 'block' : 'none');
+            root.style.setProperty('--ru-display', showRuCheck.checked ? 'block' : 'none');
+        }
+
+        // Загрузка сохраненных настроек (если есть)
+        function loadSettings() {
+            const savedArSize = localStorage.getItem('arSize');
+            const savedTrscSize = localStorage.getItem('trscSize');
+            const savedRuSize = localStorage.getItem('ruSize');
+            const savedShowAr = localStorage.getItem('showAr');
+            const savedShowTrsc = localStorage.getItem('showTrsc');
+            const savedShowRu = localStorage.getItem('showRu');
+            
+            if (savedArSize) {
+                arSizeInput.value = savedArSize;
+                updateArSize();
+            }
+            if (savedTrscSize) {
+                trscSizeInput.value = savedTrscSize;
+                updateTrscSize();
+            }
+            if (savedRuSize) {
+                ruSizeInput.value = savedRuSize;
+                updateRuSize();
+            }
+            
+            if (savedShowAr !== null) {
+                showArCheck.checked = savedShowAr === 'true';
+            }
+            if (savedShowTrsc !== null) {
+                showTrscCheck.checked = savedShowTrsc === 'true';
+            }
+            if (savedShowRu !== null) {
+                showRuCheck.checked = savedShowRu === 'true';
+            }
+            
+            updateVisibility();
+        }
+
+        // Сохранение настроек
+        function saveSettings() {
+            localStorage.setItem('arSize', arSizeInput.value);
+            localStorage.setItem('trscSize', trscSizeInput.value);
+            localStorage.setItem('ruSize', ruSizeInput.value);
+            localStorage.setItem('showAr', showArCheck.checked);
+            localStorage.setItem('showTrsc', showTrscCheck.checked);
+            localStorage.setItem('showRu', showRuCheck.checked);
+        }
+
+        // Открыть модальное окно
+        settingsBtn.addEventListener('click', () => {
+            modal.style.display = 'flex';
+        });
+
+        // Закрыть и сохранить
+        closeBtn.addEventListener('click', () => {
+            saveSettings();
+            modal.style.display = 'none';
+        });
+
+        // Закрыть по клику на overlay
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                saveSettings();
+                modal.style.display = 'none';
+            }
+        });
+
+        // Слушатели изменений
+        arSizeInput.addEventListener('input', updateArSize);
+        trscSizeInput.addEventListener('input', updateTrscSize);
+        ruSizeInput.addEventListener('input', updateRuSize);
+        
+        showArCheck.addEventListener('change', updateVisibility);
+        showTrscCheck.addEventListener('change', updateVisibility);
+        showRuCheck.addEventListener('change', updateVisibility);
+
+        // Инициализация
+        loadSettings();
+    </script>
 </body>
 </html>

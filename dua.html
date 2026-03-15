@@ -12,10 +12,13 @@
             color: #222; 
             padding: 0;
             line-height: 1.6;
+            margin-bottom: 100px; /* отступ для фиксированной панели */
         }
         .dua-section {
             max-width: 900px;
             margin: 0 auto 30px auto;
+            padding: 10px 5px;
+            line-height: 1.5em;
             background-color: #ffffff;
             border-radius: 20px;
             box-shadow: 0 6px 18px rgba(0,0,0,0.05); 
@@ -23,6 +26,7 @@
         .title {
             font-size: 1.6rem;
             font-weight: 600;
+            text-align: center;
             color: #2c5f2d;
             border-bottom: 2px solid #d4af37;
             padding-bottom: 8px;
@@ -50,19 +54,20 @@
         /* КАЖДЫЙ БЛОК - ширина по арабскому тексту */
         .fragment {
             font-size: 33px;
-            width: min-content;  /* блок сужается до минимальной ширины контента */
-            max-width: min-content; /* или так, если нужен только верхний предел */ 
+            width: min-content;
+            max-width: min-content; 
         }
         
         /* Арабский - запрет переноса */
         .ar {
-  	        
-                font-family: 'Scheherazade', 'Times New Roman', serif;
-                line-height: 1.2em;
-    		white-space: nowrap;
-    		direction: rtl;
-   		text-align: center;
-    		color: #1e3c72;
+            font-family: 'Scheherazade', 'Times New Roman', serif;
+            line-height: 1.4em;
+            white-space: nowrap;
+            direction: rtl;
+            text-align: center;
+            color: #1e3c72;
+            font-size: var(--ar-size, 33px);
+            display: var(--ar-display, block);
         }
         
         /* Русский - принудительный перенос */
@@ -71,12 +76,12 @@
             overflow-wrap: normal;
             word-break: normal;
             hyphens: none;
-		
+            direction: ltr;
             max-width: 100%; 
-            font-size: 0.4em;
+            font-size: var(--ru-size, 0.4em);
             line-height: 0.9em;
             text-align: center;   
-            display: block;
+            display: var(--ru-display, block);
         }
         .trsc {
             white-space: normal;
@@ -84,411 +89,184 @@
             word-break: normal;
             hyphens: none;
             max-width: 100%; 
-            font-size: 0.4em;
+            font-size: var(--trsc-size, 0.4em);
+            direction: ltr;
             line-height: 0.9em;
             text-align: center;  
-                color: #8f8f8f; 
-            display: block;
+            color: #8f8f8f; 
+            display: var(--trsc-display, block);
             font-family: 'Courier New', monospace;
         }
-        
-    </style>
-<script>
-// Функция для создания и управления настройками текста
-function createTextSettings() {
-    // Создаем контейнер для кнопки настроек, если его нет
-    let settingsBtn = document.getElementById('textSettingsBtn');
-    if (!settingsBtn) {
-        settingsBtn = document.createElement('button');
-        settingsBtn.id = 'textSettingsBtn';
-        settingsBtn.textContent = '⚙️';
-        settingsBtn.style.cssText = `
-            position: fixed;
-            top: 2px;
-            right: 2px;
-            background: #0b5e42;
-            color: white;
-            border: none;
-            padding: 1px 2px;
-            border-radius: 40px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            z-index: 10000;
-            border: 2px solid #c4a747;
-            transition: 0.2s;
-        `;
-        settingsBtn.addEventListener('mouseenter', () => {
-            settingsBtn.style.backgroundColor = '#1a7a5a';
-        });
-        settingsBtn.addEventListener('mouseleave', () => {
-            settingsBtn.style.backgroundColor = '#0b5e42';
-        });
-        document.body.appendChild(settingsBtn);
-    }
 
-    // Создаем модальное окно настроек
-    let modal = document.getElementById('textSettingsModal');
-    if (!modal) {
-        modal = document.createElement('div');
-        modal.id = 'textSettingsModal';
-        modal.style.cssText = `
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
-            z-index: 10001;
-            width: 350px;
-            max-width: 90vw;
-            border: 3px solid #c4a747;
-        `;
-        
-        // Заголовок
-        const title = document.createElement('h3');
-        title.textContent = 'Настройки отображения';
-        title.style.cssText = `
-            margin-top: 0;
-            margin-bottom: 25px;
-            color: #0b5e42;
-            border-bottom: 2px solid #c4a747;
-            padding-bottom: 10px;
-            font-size: 1.5rem;
-        `;
-        modal.appendChild(title);
-
-        // Размер арабского текста
-        const arabicLabel = document.createElement('label');
-        arabicLabel.textContent = 'Размер арабского текста:';
-        arabicLabel.style.cssText = `
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #2c3e50;
-        `;
-        modal.appendChild(arabicLabel);
-
-        const arabicSlider = document.createElement('input');
-        arabicSlider.type = 'range';
-        arabicSlider.id = 'arabicSizeSlider';
-        arabicSlider.min = '16';
-        arabicSlider.max = '48';
-        arabicSlider.value = '32';
-        arabicSlider.style.cssText = `
-            width: 100%;
-            margin-bottom: 5px;
-        `;
-        modal.appendChild(arabicSlider);
-
-        const arabicSizeValue = document.createElement('div');
-        arabicSizeValue.id = 'arabicSizeValue';
-        arabicSizeValue.textContent = '32px';
-        arabicSizeValue.style.cssText = `
-            text-align: right;
-            margin-bottom: 20px;
-            color: #0b5e42;
-            font-weight: 500;
-        `;
-        modal.appendChild(arabicSizeValue);
-
-        // Размер транскрипции
-        const transLabel = document.createElement('label');
-        transLabel.textContent = 'Размер транскрипции:';
-        transLabel.style.cssText = `
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #2c3e50;
-        `;
-        modal.appendChild(transLabel);
-
-        const transSlider = document.createElement('input');
-        transSlider.type = 'range';
-        transSlider.id = 'transSizeSlider';
-        transSlider.min = '12';
-        transSlider.max = '30';
-        transSlider.value = '16';
-        transSlider.style.cssText = `
-            width: 100%;
-            margin-bottom: 5px;
-        `;
-        modal.appendChild(transSlider);
-
-        const transSizeValue = document.createElement('div');
-        transSizeValue.id = 'transSizeValue';
-        transSizeValue.textContent = '16px';
-        transSizeValue.style.cssText = `
-            text-align: right;
-            margin-bottom: 20px;
-            color: #0b5e42;
-            font-weight: 500;
-        `;
-        modal.appendChild(transSizeValue);
-
-        // Размер перевода
-        const ruLabel = document.createElement('label');
-        ruLabel.textContent = 'Размер перевода:';
-        ruLabel.style.cssText = `
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #2c3e50;
-        `;
-        modal.appendChild(ruLabel);
-
-        const ruSlider = document.createElement('input');
-        ruSlider.type = 'range';
-        ruSlider.id = 'ruSizeSlider';
-        ruSlider.min = '12';
-        ruSlider.max = '30';
-        ruSlider.value = '18';
-        ruSlider.style.cssText = `
-            width: 100%;
-            margin-bottom: 5px;
-        `;
-        modal.appendChild(ruSlider);
-
-        const ruSizeValue = document.createElement('div');
-        ruSizeValue.id = 'ruSizeValue';
-        ruSizeValue.textContent = '18px';
-        ruSizeValue.style.cssText = `
-            text-align: right;
-            margin-bottom: 25px;
-            color: #0b5e42;
-            font-weight: 500;
-        `;
-        modal.appendChild(ruSizeValue);
-
-        // Переключатели видимости
-        const toggleGroup = document.createElement('div');
-        toggleGroup.style.cssText = `
-            border-top: 2px solid #c4a747;
-            padding-top: 20px;
-            margin-bottom: 25px;
-        `;
-
-        // Чекбокс транскрипции
-        const transCheckDiv = document.createElement('div');
-        transCheckDiv.style.marginBottom = '15px';
-        
-        const transCheck = document.createElement('input');
-        transCheck.type = 'checkbox';
-        transCheck.id = 'showTrans';
-        transCheck.checked = true;
-        transCheck.style.marginRight = '10px';
-        transCheck.style.width = '18px';
-        transCheck.style.height = '18px';
-        
-        const transCheckLabel = document.createElement('label');
-        transCheckLabel.htmlFor = 'showTrans';
-        transCheckLabel.textContent = 'Показывать транскрипцию';
-        transCheckLabel.style.fontWeight = '600';
-        transCheckLabel.style.color = '#2c3e50';
-        
-        transCheckDiv.appendChild(transCheck);
-        transCheckDiv.appendChild(transCheckLabel);
-        toggleGroup.appendChild(transCheckDiv);
-
-        // Чекбокс перевода
-        const ruCheckDiv = document.createElement('div');
-        ruCheckDiv.style.marginBottom = '15px';
-        
-        const ruCheck = document.createElement('input');
-        ruCheck.type = 'checkbox';
-        ruCheck.id = 'showRu';
-        ruCheck.checked = true;
-        ruCheck.style.marginRight = '10px';
-        ruCheck.style.width = '18px';
-        ruCheck.style.height = '18px';
-        
-        const ruCheckLabel = document.createElement('label');
-        ruCheckLabel.htmlFor = 'showRu';
-        ruCheckLabel.textContent = 'Показывать перевод';
-        ruCheckLabel.style.fontWeight = '600';
-        ruCheckLabel.style.color = '#2c3e50';
-        
-        ruCheckDiv.appendChild(ruCheck);
-        ruCheckDiv.appendChild(ruCheckLabel);
-        toggleGroup.appendChild(ruCheckDiv);
-
-        modal.appendChild(toggleGroup);
-
-        // Кнопки управления
-        const btnGroup = document.createElement('div');
-        btnGroup.style.cssText = `
-            display: flex;
-            gap: 15px;
-            justify-content: flex-end;
-        `;
-
-        const saveBtn = document.createElement('button');
-        saveBtn.textContent = 'Сохранить';
-        saveBtn.style.cssText = `
-            background: #0b5e42;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 30px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            flex: 1;
-        `;
-
-        const closeBtn = document.createElement('button');
-        closeBtn.textContent = 'Закрыть';
-        closeBtn.style.cssText = `
-            background: #e0e0e0;
-            color: #333;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 30px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            flex: 1;
-        `;
-
-        btnGroup.appendChild(saveBtn);
-        btnGroup.appendChild(closeBtn);
-        modal.appendChild(btnGroup);
-
-        document.body.appendChild(modal);
-
-        // Overlay
-        const overlay = document.createElement('div');
-        overlay.id = 'settingsOverlay';
-        overlay.style.cssText = `
+        /* Затемнение фона */
+        .modal-overlay {
             display: none;
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 10000;
-        `;
-        document.body.appendChild(overlay);
-
-        // Функции открытия/закрытия
-        function openModal() {
-            modal.style.display = 'block';
-            overlay.style.display = 'block';
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1001;
+            justify-content: center;
+            align-items: center;
         }
 
-        function closeModal() {
-            modal.style.display = 'none';
-            overlay.style.display = 'none';
+        /* Окно настроек */
+        .settings-modal {
+            background-color: white;
+            padding: 25px;
+            border-radius: 30px;
+            width: 90%;
+            max-width: 350px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
         }
 
-        // Обработчики
-        settingsBtn.addEventListener('click', openModal);
-        closeBtn.addEventListener('click', closeModal);
-        overlay.addEventListener('click', closeModal);
-
-        // Обновление отображаемых значений
-        arabicSlider.addEventListener('input', () => {
-            arabicSizeValue.textContent = arabicSlider.value + 'px';
-        });
-
-        transSlider.addEventListener('input', () => {
-            transSizeValue.textContent = transSlider.value + 'px';
-        });
-
-        ruSlider.addEventListener('input', () => {
-            ruSizeValue.textContent = ruSlider.value + 'px';
-        });
-
-        // Загрузка сохраненных настроек
-        function loadSettings() {
-            const savedArabic = localStorage.getItem('arabicFontSize');
-            const savedTrans = localStorage.getItem('transFontSize');
-            const savedRu = localStorage.getItem('ruFontSize');
-            const savedShowTrans = localStorage.getItem('showTrans');
-            const savedShowRu = localStorage.getItem('showRu');
-
-            if (savedArabic) {
-                arabicSlider.value = savedArabic;
-                arabicSizeValue.textContent = savedArabic + 'px';
-            }
-            if (savedTrans) {
-                transSlider.value = savedTrans;
-                transSizeValue.textContent = savedTrans + 'px';
-            }
-            if (savedRu) {
-                ruSlider.value = savedRu;
-                ruSizeValue.textContent = savedRu + 'px';
-            }
-            if (savedShowTrans !== null) {
-                transCheck.checked = savedShowTrans === 'true';
-            }
-            if (savedShowRu !== null) {
-                ruCheck.checked = savedShowRu === 'true';
-            }
-
-            applySettings();
+        .settings-modal h3 {
+            margin-top: 0;
+            color: #2c5f2d;
+            text-align: center;
+            border-bottom: 2px solid #d4af37;
+            padding-bottom: 10px;
         }
 
-        // Применение настроек
-        function applySettings() {
-            // Размеры
-            document.querySelectorAll('.ar').forEach(el => {
-                el.style.fontSize = arabicSlider.value + 'px';
-            });
-            document.querySelectorAll('.trsc').forEach(el => {
-                el.style.fontSize = transSlider.value + 'px';
-            });
-            document.querySelectorAll('.ru').forEach(el => {
-                el.style.fontSize = ruSlider.value + 'px';
-            });
-
-            // Видимость
-            document.querySelectorAll('.trsc').forEach(el => {
-                el.style.display = transCheck.checked ? 'block' : 'none';
-            });
-            document.querySelectorAll('.ru').forEach(el => {
-                el.style.display = ruCheck.checked ? 'block' : 'none';
-            });
-
-            // Сохраняем
-            localStorage.setItem('arabicFontSize', arabicSlider.value);
-            localStorage.setItem('transFontSize', transSlider.value);
-            localStorage.setItem('ruFontSize', ruSlider.value);
-            localStorage.setItem('showTrans', transCheck.checked);
-            localStorage.setItem('showRu', ruCheck.checked);
+        .setting-item {
+            margin-bottom: 20px;
         }
 
-        saveBtn.addEventListener('click', () => {
-            applySettings();
-            closeModal();
-        });
+        .setting-item label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #444;
+        }
 
-        // Загружаем настройки при старте
-        loadSettings();
+        .setting-item input[type="range"] {
+            width: 100%;
+            margin: 5px 0;
+        }
 
-        // Добавляем наблюдатель для новых элементов
-        const observer = new MutationObserver(() => {
-            applySettings();
-        });
-        observer.observe(document.body, { childList: true, subtree: true });
-    }
-}
+        .checkbox-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
 
-// Запускаем после загрузки DOM
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', createTextSettings);
-} else {
-    createTextSettings();
-}
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: normal;
+        }
 
-// Экспортируем функцию на случай ручного вызова
-window.createTextSettings = createTextSettings;
-</script>
+        .close-btn {
+            background-color: #2c5f2d;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 30px;
+            width: 100%;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background-color 0.2s;
+        }
+
+        .close-btn:hover {
+            background-color: #1e4620;
+        }
+
+        .value-display {
+            float: right;
+            color: #2c5f2d;
+            font-weight: 600;
+        }
+
+        /* Закреплённая нижняя панель */
+        .nav {
+            display: flex;
+            justify-content: center;
+        }
+
+        .bottom-nav { 
+            position: fixed;
+            bottom: 0; 
+            width: 245px;
+            background-color: #ffffff;
+            border-radius: 20px 20px 0 0;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+            padding: 5px 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(0,0,0,0.03);
+            border-bottom: none;
+            z-index: 1000;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center; 
+            color: #a0a0a0;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            text-decoration: none;
+            flex: 1;
+            max-width: 80px;
+        }
+
+        .nav-item:hover {
+            color: #666;
+            transform: translateY(-2px);
+        }
+
+        .nav-item .icon {
+            width: 24px;
+            height: 24px;   
+            transition: transform 0.2s ease;
+        }
+        
+        .nav-item.active {
+            color: #000000;
+            fill: #000;
+        }
+
+        .nav-item:not(.active) {
+            color: #b0b0b0;
+            fill: #b0b0b0;
+        }
+
+        @media (max-width: 400px) {
+            .bottom-nav {
+                padding: 10px 16px;
+            }
+            .nav-item {
+                font-size: 12px;
+            }
+            .nav-item .icon {
+                width: 22px;
+                height: 22px;
+            }
+        }
+
+        @supports (padding-bottom: env(safe-area-inset-bottom)) {
+            .bottom-nav {
+                
+            }
+        }
+    </style>
 </head>
 <body>
 
@@ -497,667 +275,158 @@ window.createTextSettings = createTextSettings;
         <div class="title">1. Всеобъемлющая мольба Пророка ﷺ</div>
         <div class="source">Источник: Ахмад 6/146, аль-Бухари «аль-Адаб аль-муфрад» 639, Ибн Маджах 3846, Ибн Хиббан 866</div>
         <div class="wrapper">
-            <div class="fragment">
-                <div class="ar">اللهُمَّ إِنِّي أَسْأَلُكَ</div>
-                <div class="trsc">Аллахумма инни ас-алюка</div>
-                <div class="ru">О Аллах, поистине, я прошу Тебя</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">مِنَ الْخَيْرِ كُلِّهِ</div>
-                <div class="trsc">миналь-хайри куллихи</div>
-                <div class="ru">о всяком благе</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">عَاجِلِهِ وَآجِلِهِ</div>
-                <div class="trsc">‘аджилихи уа аджилихи</div>
-                <div class="ru">что может произойти рано или поздно</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">مَا عَلِمْتُ مِنْهُ</div>
-                <div class="trsc">ма ‘алимту минху</div>
-                <div class="ru">из того, что мне известно</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَمَا لَمْ أَعْلَمْ</div>
-                <div class="trsc">уа ма лям а‘лям</div>
-                <div class="ru">и из того, что мне неизвестно</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَأَعُوذُ بِكَ</div>
-                <div class="trsc">уа а‘узу бика</div>
-                <div class="ru">И я прибегаю к Твоей защите</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">مِنَ الشَّرِّ كُلِّهِ</div>
-                <div class="trsc">мина-шшарри куллихи</div>
-                <div class="ru">от всякого зла</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">عَاجِلِهِ وَآجِلِهِ</div>
-                <div class="trsc">‘аджилихи уа аджилихи</div>
-                <div class="ru">что может произойти рано или поздно</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">مَا عَلِمْتُ مِنْهُ</div>
-                <div class="trsc">ма ‘алимту минху</div>
-                <div class="ru">о котором мне известно</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَمَا لَمْ أَعْلَمْ</div>
-                <div class="trsc">уа ма лям а‘лям</div>
-                <div class="ru">и о котором мне неизвестно</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">اللهُمَّ إِنِّي أَسْأَلُكَ</div>
-                <div class="trsc">Аллахумма инни ас-алюка</div>
-                <div class="ru">О Аллах, поистине, я прошу Тебя</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">مِنْ خَيْرِ مَا سَأَلَكَ</div>
-                <div class="trsc">мин хайри ма са-аляка</div>
-                <div class="ru">о благе того, о чём просил</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">عَبْدُكَ وَنَبِيُّكَ</div>
-                <div class="trsc">‘абдука уа набиййук</div>
-                <div class="ru">Твой раб и Пророк</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَأَعُوذُ بِكَ</div>
-                <div class="trsc">уа а‘узу бика</div>
-                <div class="ru">и прибегаю к Тебе</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">مِنْ شَرِّ مَا عَاذَ مِنْهُ</div>
-                <div class="trsc">мин шарри ма ‘аза минху</div>
-                <div class="ru">от зла того, от чего прибегал</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">عَبْدُكَ وَنَبِيُّكَ</div>
-                <div class="trsc">‘абдука уа набиййук</div>
-                <div class="ru">Твой раб и Пророк</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">اللهُمَّ إِنِّي أَسْأَلُكَ</div>
-                <div class="trsc">Аллахумма инни ас-алюка</div>
-                <div class="ru">О Аллах, поистине, я прошу Тебя</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">الْجَنَّةَ وَمَا قَرَّبَ إِلَيْهَا</div>
-                <div class="trsc">аль-джанната уа ма карраба илейха</div>
-                <div class="ru">о Рае и о том, что приближает к нему</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">مِنْ قَوْلٍ أَوْ عَمَلٍ</div>
-                <div class="trsc">мин каулин ау ‘амаль</div>
-                <div class="ru">из слов или дел</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَأَعُوذُ بِكَ مِنَ النَّارِ</div>
-                <div class="trsc">уа а‘узу бика мина-ннари</div>
-                <div class="ru">И я прибегаю к Твоей защите от Ада</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَمَا قَرَّبَ إِلَيْهَا</div>
-                <div class="trsc">уа ма карраба илейха</div>
-                <div class="ru">и от того, что приближает к нему</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">مِنْ قَوْلٍ أَوْ عَمَلٍ</div>
-                <div class="trsc">мин каулин ау ‘амаль</div>
-                <div class="ru">из слов или дел</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَأَسْأَلُكَ أَنْ تَجْعَلَ</div>
-                <div class="trsc">уа ас-алюка ан тадж‘аля</div>
-                <div class="ru">И я прошу Тебя сделать так</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">كُلَّ قَضَاءٍ تَقْضِيهِ لِي</div>
-                <div class="trsc">кулля када-ин такдыхи ли</div>
-                <div class="ru">чтобы каждое решение, которое Ты выносишь для меня</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">خَيْرًا</div>
-                <div class="trsc">хайра</div>
-                <div class="ru">было благим</div>
-            </div>
+            <div class="fragment"><div class="ar">اللهُمَّ إِنِّي أَسْأَلُكَ مِنَ الْخَيْرِ كُلِّهِ</div><div class="trsc">Аллахумма инни ас-алюка миналь-хайри куллихи</div><div class="ru">О Аллах, поистине, я прошу Тебя о всяком благе</div></div>
+            <div class="fragment"><div class="ar">عَاجِلِهِ وَآجِلِهِ</div><div class="trsc">‘аджилихи уа аджилихи</div><div class="ru">что может произойти рано или поздно</div></div>
+            <div class="fragment"><div class="ar">مَا عَلِمْتُ مِنْهُ وَمَا لَمْ أَعْلَمْ</div><div class="trsc">ма ‘алимту минху уа ма лям а‘лям</div><div class="ru">из того, что мне известно и неизвестно!</div></div>
+            <div class="fragment"><div class="ar">وَأَعُوذُ بِكَ مِنَ الشَّرِّ كُلِّهِ</div><div class="trsc">Уа а‘узу бика мина-шшарри куллихи</div><div class="ru">И я прибегаю к Твоей защите от всякого зла</div></div>
+            <div class="fragment"><div class="ar">عَاجِلِهِ وَآجِلِهِ</div><div class="trsc">‘аджилихи уа аджилихи</div><div class="ru">что может произойти рано или поздно</div></div>
+            <div class="fragment"><div class="ar">مَا عَلِمْتُ مِنْهُ وَمَا لَمْ أَعْلَمْ</div><div class="trsc">ма ‘алимту минху уа ма лям а‘лям</div><div class="ru">о котором мне известно и неизвестно!</div></div>
+            <div class="fragment"><div class="ar">اللهُمَّ إِنِّي أَسْأَلُكَ مِنْ خَيْرِ مَا سَأَلَكَ عَبْدُكَ وَنَبِيُّكَ</div><div class="trsc">Аллахумма инни ас-алюка мин хайри ма са-аляка ‘абдука уа набиййук</div><div class="ru">О Аллах, поистине, я прошу Тебя о том благе, о котором просил Тебя Твой раб и Пророк</div></div>
+            <div class="fragment"><div class="ar">اللهُمَّ إِنِّي أَسْأَلُكَ مِنْ خَيْرِ مَا سَأَلَكَ عَبْدُكَ وَنَبِيُّكَ</div><div class="trsc">Аллахумма инни ас-алюка мин хайри ма са-аляка ‘абдука уа набиййук</div><div class="ru">О Аллах, поистине, я прошу Тебя о том благе, о котором просил Тебя Твой раб и Пророк</div></div>
+
+
+
+            <div class="fragment"><div class="ar">وَأَعُوذُ بِكَ مِنْ شَرِّ مَا عَاذَ مِنْهُ عَبْدُكَ وَنَبِيُّكَ</div><div class="trsc">уа а‘узу бика мин шарри ма ‘аза минху ‘абдука уа набиййук</div><div class="ru">и прибегаю к Тебе от зла того, от чего прибегал Твой раб и Пророк!</div></div>
+            <div class="fragment"><div class="ar">اللهُمَّ إِنِّي أَسْأَلُكَ الْجَنَّةَ</div><div class="trsc">Аллахумма инни ас-алюкаль-джанната</div><div class="ru">О Аллах, поистине, я прошу Тебя о Рае</div></div>
+            <div class="fragment"><div class="ar">وَمَا قَرَّبَ إِلَيْهَا مِنْ قَوْلٍ أَوْ عَمَلٍ</div><div class="trsc">уа ма карраба илейха мин каулин ау ‘амаль</div><div class="ru">а также о словах и делах, приближающих к нему!</div></div>
+            <div class="fragment"><div class="ar">وَأَعُوذُ بِكَ مِنَ النَّارِ</div><div class="trsc">уа а‘узу бика мина-ннари</div><div class="ru">И я прибегаю к Твоей защите от Ада</div></div>
+            <div class="fragment"><div class="ar">وَمَا قَرَّبَ إِلَيْهَا مِنْ قَوْلٍ أَوْ عَمَلٍ</div><div class="trsc">уа ма карраба илейха мин каулин ау ‘амаль</div><div class="ru">а также от слов и деяний, приближающих к нему!</div></div>
+            <div class="fragment"><div class="ar">وَأَسْأَلُكَ أَنْ تَجْعَلَ كُلَّ قَضَاءٍ تَقْضِيهِ لِي خَيْرًا</div><div class="trsc">уа ас-алюка ан тадж‘аля кулля када-ин такдыхи ли хайра</div><div class="ru">И я прошу Тебя о том, чтобы всё, что Ты предопределил для меня, было благим!</div></div>
         </div>
     </div>
 
     <!-- 2. О помощи, прямом пути и чистоте сердца -->
     <div class="dua-section">
         <div class="title">2. О помощи, прямом пути и чистоте сердца</div>
-        <div class="source">Источник: ат-Тирмизи 5/554, Ибн Маджах 2/1259, «Сахих аль-джами'» 3485</div>
+        <div class="source">Источник: ат-Тирмизи 5/554, Ибн Маджах 2/1259, «Сахих аль-джами‘» 3485</div>
         <div class="wrapper">
-            <div class="fragment">
-                <div class="ar">رَبِّ أَعِنِّي</div>
-                <div class="trsc">Рабби а‘инни</div>
-                <div class="ru">Господь мой, помоги мне</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَلاَ تُعِنْ عَلَيَّ</div>
-                <div class="trsc">уа ля ту‘ин ‘аляййа</div>
-                <div class="ru">и не помогай против меня</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَانْصُرْنِي</div>
-                <div class="trsc">уансурни</div>
-                <div class="ru">и сделай меня победителем</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَلاَ تَنْصُرْ عَلَيَّ</div>
-                <div class="trsc">уа ля тансур ‘аляййа</div>
-                <div class="ru">и не делай меня побеждённым</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَامْكُرْ لِي</div>
-                <div class="trsc">уамкур ли</div>
-                <div class="ru">и сделай меня ловким</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَلاَ تَمْكُرْ عَلَيَّ</div>
-                <div class="trsc">уа ля тамкур ‘аляййа</div>
-                <div class="ru">и не даруй ловкости против меня</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَاهْدِنِي</div>
-                <div class="trsc">уахдини</div>
-                <div class="ru">и веди меня прямым путём</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَيَسِّرِ الهُدَى لِي</div>
-                <div class="trsc">уа яссириль-худа ли</div>
-                <div class="ru">и облегчи для меня путь мой</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَانْصُرْنِي عَلَى مَنْ</div>
-                <div class="trsc">уансурни ‘аля ман</div>
-                <div class="ru">и помоги мне против тех</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">بَغَى عَلَيَّ</div>
-                <div class="trsc">багъа ‘аляййа</div>
-                <div class="ru">кто враждовал со мной</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">رَبِّ اجْعَلْنِي لَكَ شَكَّارًا</div>
-                <div class="trsc">Рабби-дж‘альни ляка шаккаран</div>
-                <div class="ru">Господь мой, сделай меня много благодарным Тебе</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">لَكَ ذَكَّارًا</div>
-                <div class="trsc">ляка заккаран</div>
-                <div class="ru">много поминающим Тебя</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">لَكَ رَهَّابًا</div>
-                <div class="trsc">ляка раххабан</div>
-                <div class="ru">боящимся Тебя</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">لَكَ مِطْوَاعًا</div>
-                <div class="trsc">ляка митва‘ан</div>
-                <div class="ru">покорным Тебе</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">لَكَ مُخْبِتًا</div>
-                <div class="trsc">ляка мухбитан</div>
-                <div class="ru">смиренным перед Тобой</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">إِلَيْكَ أَوَّاهًا مُنِيبًا</div>
-                <div class="trsc">илейка аввахан мунибан</div>
-                <div class="ru">кающимся к Тебе</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">رَبِّ تَقَبَّلْ تَوْبَتِي</div>
-                <div class="trsc">Рабби такаббаль таубати</div>
-                <div class="ru">Господь мой, прими покаяние моё</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَاغْسِلْ حَوْبَتِي</div>
-                <div class="trsc">уагъсиль хаубати</div>
-                <div class="ru">и отчисти меня от грехов моих</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَأَجِبْ دَعْوَتِي</div>
-                <div class="trsc">уа аджиб да‘уати</div>
-                <div class="ru">и ответь на мольбу мою</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَثَبِّتْ حُجَّتِي</div>
-                <div class="trsc">уа саббит худджати</div>
-                <div class="ru">и укрепи мои доводы</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَسَدِّدْ لِسَانِي</div>
-                <div class="trsc">уа саддид лисани</div>
-                <div class="ru">и выправь язык мой</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَاهْدِ قَلْبِي</div>
-                <div class="trsc">уахди кальби</div>
-                <div class="ru">и направь сердце моё</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَاسْلُلْ سَخِيمَةَ صَدْرِي</div>
-                <div class="trsc">уаслюль сахимата садри</div>
-                <div class="ru">и исторгни злобу из груди моей</div>
-            </div>
+            <div class="fragment"><div class="ar">رَبِّ أَعِنِّي وَلاَ تُعِنْ عَلَيَّ</div><div class="trsc">Рабби а‘инни уа ля ту‘ин ‘аляййа</div><div class="ru">Господь мой, помоги мне и не помогай против меня!</div></div>
+            <div class="fragment"><div class="ar">وَانْصُرْنِي وَلاَ تَنْصُرْ عَلَيَّ</div><div class="trsc">уансурни уа ля тансур ‘аляййа</div><div class="ru">Сделай меня победителем и не делай меня побеждённым!</div></div>
+            <div class="fragment"><div class="ar">وَامْكُرْ لِي وَلاَ تَمْكُرْ عَلَيَّ</div><div class="trsc">уамкур ли уа ля тамкур ‘аляййа</div><div class="ru">Сделай меня ловким и не даруй ловкости против меня!</div></div>
+            <div class="fragment"><div class="ar">وَاهْدِنِي وَيَسِّرِ الهُدَى لِي</div><div class="trsc">уахдини уа яссириль-худа ли</div><div class="ru">Веди меня прямым путём и облегчи для меня путь мой</div></div>
+            <div class="fragment"><div class="ar">وَانْصُرْنِي عَلَى مَنْ بَغَى عَلَيَّ</div><div class="trsc">уансурни ‘аля ман багъа ‘аляййа</div><div class="ru">и помоги мне против тех, кто враждовал со мной.</div></div>
+            <div class="fragment"><div class="ar">رَبِّ اجْعَلْنِي لَكَ شَكَّارًا</div><div class="trsc">Рабби-дж‘альни ляка шаккаран</div><div class="ru">Господь мой, сделай меня много благодарным Тебе</div></div>
+            <div class="fragment"><div class="ar">لَكَ ذَكَّارًا</div><div class="trsc">ляка заккаран</div><div class="ru">много поминающим Тебя</div></div>
+            <div class="fragment"><div class="ar">لَكَ رَهَّابًا</div><div class="trsc">ляка раххабан</div><div class="ru">боящимся Тебя</div></div>
+            <div class="fragment"><div class="ar">لَكَ مِطْوَاعًا</div><div class="trsc">ляка митва‘ан</div><div class="ru">покорным Тебе</div></div>
+            <div class="fragment"><div class="ar">لَكَ مُخْبِتًا</div><div class="trsc">ляка мухбитан</div><div class="ru">смиренным перед Тобой</div></div>
+            <div class="fragment"><div class="ar">إِلَيْكَ أَوَّاهًا مُنِيبًا</div><div class="trsc">илейка аввахан мунибан</div><div class="ru">кающимся к Тебе.</div></div>
+            <div class="fragment"><div class="ar">رَبِّ تَقَبَّلْ تَوْبَتِي</div><div class="trsc">Рабби такаббаль таубати</div><div class="ru">Господь мой, прими покаяние моё</div></div>
+            <div class="fragment"><div class="ar">وَاغْسِلْ حَوْبَتِي</div><div class="trsc">уагъсиль хаубати</div><div class="ru">отчисти меня от грехов моих</div></div>
+            <div class="fragment"><div class="ar">وَأَجِبْ دَعْوَتِي</div><div class="trsc">уа аджиб да‘уати</div><div class="ru">ответь на мольбу мою</div></div>
+            <div class="fragment"><div class="ar">وَثَبِّتْ حُجَّتِي</div><div class="trsc">уа саббит худджати</div><div class="ru">укрепи мои доводы</div></div>
+            <div class="fragment"><div class="ar">وَسَدِّدْ لِسَانِي</div><div class="trsc">уа саддид лисани</div><div class="ru">выправь язык мой</div></div>
+            <div class="fragment"><div class="ar">وَاهْدِ قَلْبِي</div><div class="trsc">уахди кальби</div><div class="ru">направь сердце моё</div></div>
+            <div class="fragment"><div class="ar">وَاسْلُلْ سَخِيمَةَ صَدْرِي</div><div class="trsc">уаслюль-сахимата садри</div><div class="ru">и исторгни злобу из груди моей!</div></div>
         </div>
     </div>
 
     <!-- 3. Защита от болезней и пороков -->
     <div class="dua-section">
         <div class="title">3. Защита от болезней и пороков</div>
-        <div class="source">Источник: аль-Хаким, аль-Байхакъи, «Сахих аль-джами'» 1285</div>
+        <div class="source">Источник: аль-Хаким, аль-Байхакъи, «Сахих аль-джами‘» 1285</div>
         <div class="wrapper">
-            <div class="fragment">
-                <div class="ar">اللَّهُمَّ إِنِّي أَعُوذُ بِكَ</div>
-                <div class="trsc">Аллахумма инни а‘узубика</div>
-                <div class="ru">О Аллах, поистине, я прибегаю к Тебе</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">مِنَ الْعَجْزِ وَالْكَسَلِ</div>
-                <div class="trsc">миналь-‘аджзи уаль-касали</div>
-                <div class="ru">от бессилия и лени</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَالْجُبْنِ وَالْبُخْلِ</div>
-                <div class="trsc">уаль-джубни уаль-бухли</div>
-                <div class="ru">от трусости и жадности</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَالْهَرَمِ وَالْقَسْوَةِ</div>
-                <div class="trsc">уаль-харами уаль-касуати</div>
-                <div class="ru">от дряхлости и жестокости</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَالْغَفْلَةِ وَالْعَيْلَةِ</div>
-                <div class="trsc">уаль-гъафляти уаль-‘айляти</div>
-                <div class="ru">от рассеянности и зависимости</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَالذِّلَّةِ وَالْمَسْكَنَةِ</div>
-                <div class="trsc">уаз-зилляти уаль-масканати</div>
-                <div class="ru">от унижения и нищеты духа</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَأَعُوذُ بِكَ مِنَ الْفَقْرِ</div>
-                <div class="trsc">уа а‘узубика миналь-факъри</div>
-                <div class="ru">И я прибегаю к Тебе от нищеты</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَالْكُفْرِ وَالْفُسُوقِ</div>
-                <div class="trsc">уаль-куфри уаль-фусукъи</div>
-                <div class="ru">от неверия и нечестия</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَالشِّقَاقِ وَالنِّفَاقِ</div>
-                <div class="trsc">уаш-шикъакъи уан-нифакъи</div>
-                <div class="ru">от раскола и лицемерия</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَالسُّمْعَةِ وَالرِّيَاءِ</div>
-                <div class="trsc">уас-сум‘ати уар-рийа-и</div>
-                <div class="ru">от показухи и рисовки</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَأَعُوذُ بِكَ مِنَ الصَّمَمِ</div>
-                <div class="trsc">уа а‘узубика мина-ссамами</div>
-                <div class="ru">И прибегаю к Тебе от глухоты</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَالْبَكَمِ وَالْجُنُونِ</div>
-                <div class="trsc">уаль-баками уаль-джунуни</div>
-                <div class="ru">от немоты и безумия</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَالْجُذَامِ وَالْبَرَصِ</div>
-                <div class="trsc">уаль-джузами уаль-бараси</div>
-                <div class="ru">от проказы и витилиго</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَسَيِّئِ الأَسْقَامِ</div>
-                <div class="trsc">уа саййи-иль-аскъами</div>
-                <div class="ru">и от худших из болезней</div>
-            </div>
+            <div class="fragment"><div class="ar">اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنَ الْعَجْزِ</div><div class="trsc">Аллахумма инни а‘узубика миналь-‘аджзи</div><div class="ru">О Аллах, поистине, я прибегаю к Тебе за защитой от бессилия</div></div>
+            <div class="fragment"><div class="ar">وَالْكَسَلِ</div><div class="trsc">уаль-касали</div><div class="ru">лени</div></div>
+            <div class="fragment"><div class="ar">وَالْجُبْنِ</div><div class="trsc">уаль-джубни</div><div class="ru">трусости</div></div>
+            <div class="fragment"><div class="ar">وَالْبُخْلِ</div><div class="trsc">уаль-бухли</div><div class="ru">жадности</div></div>
+            <div class="fragment"><div class="ar">وَالْهَرَمِ</div><div class="trsc">уаль-харами</div><div class="ru">дряхлости</div></div>
+            <div class="fragment"><div class="ar">وَالْقَسْوَةِ</div><div class="trsc">уаль-касуати</div><div class="ru">жестокости</div></div>
+            <div class="fragment"><div class="ar">وَالْغَفْلَةِ</div><div class="trsc">уаль-гъафляти</div><div class="ru">рассеянности</div></div>
+            <div class="fragment"><div class="ar">وَالْعَيْلَةِ</div><div class="trsc">уаль-‘айляти</div><div class="ru">зависимости от кого-либо</div></div>
+            <div class="fragment"><div class="ar">وَالذِّلَّةِ</div><div class="trsc">уаз-зилляти</div><div class="ru">унижения</div></div>
+            <div class="fragment"><div class="ar">وَالْمَسْكَنَةِ</div><div class="trsc">уаль-масканати</div><div class="ru">нищеты духа</div></div>
+            <div class="fragment"><div class="ar">وَأَعُوذُ بِكَ مِنَ الْفَقْرِ</div><div class="trsc">Уа а‘узубика миналь-факъри</div><div class="ru">И я прибегаю к Тебе за защитой от нищеты</div></div>
+            <div class="fragment"><div class="ar">وَالْكُفْرِ</div><div class="trsc">уаль-куфри</div><div class="ru">неверия</div></div>
+            <div class="fragment"><div class="ar">وَالْفُسُوقِ</div><div class="trsc">уаль-фусукъи</div><div class="ru">нечестия</div></div>
+            <div class="fragment"><div class="ar">وَالشِّقَاقِ</div><div class="trsc">уаш-шикъакъи</div><div class="ru">раскола</div></div>
+            <div class="fragment"><div class="ar">وَالنِّفَاقِ</div><div class="trsc">уан-нифакъи</div><div class="ru">лицемерия</div></div>
+            <div class="fragment"><div class="ar">وَالسُّمْعَةِ</div><div class="trsc">уас-сум‘ати</div><div class="ru">стремления к показухе</div></div>
+            <div class="fragment"><div class="ar">وَالرِّيَاءِ</div><div class="trsc">уар-рийа-и</div><div class="ru">рисовки</div></div>
+            <div class="fragment"><div class="ar">وَأَعُوذُ بِكَ مِنَ الصَّمَمِ</div><div class="trsc">Уа а‘узубика мина-ссамами</div><div class="ru">И прибегаю к Тебе от глухоты</div></div>
+            <div class="fragment"><div class="ar">وَالْبَكَمِ</div><div class="trsc">уаль-баками</div><div class="ru">немоты</div></div>
+            <div class="fragment"><div class="ar">وَالْجُنُونِ</div><div class="trsc">уаль-джунуни</div><div class="ru">безумия</div></div>
+            <div class="fragment"><div class="ar">وَالْجُذَامِ</div><div class="trsc">уаль-джузами</div><div class="ru">проказы</div></div>
+            <div class="fragment"><div class="ar">وَالْبَرَصِ</div><div class="trsc">уаль-бараси</div><div class="ru">витилиго</div></div>
+            <div class="fragment"><div class="ar">وَسَيِّئِ الأَسْقَامِ</div><div class="trsc">уа саййи-иль-аскъами</div><div class="ru">и худших из болезней!</div></div>
         </div>
     </div>
 
     <!-- 4. О богобоязненности, здоровье и благодарности -->
     <div class="dua-section">
         <div class="title">4. О богобоязненности, здоровье и благодарности</div>
-        <div class="source">Источник: ат-Тирмизи 3502, «Сахих аль-джами'» 1268</div>
+        <div class="source">Источник: ат-Тирмизи 3502, «Сахих аль-джами‘» 1268</div>
         <div class="wrapper">
-            <div class="fragment">
-                <div class="ar">اللَّهُمَّ اقْسِمْ لَنَا</div>
-                <div class="trsc">Аллахумма-ксим ляна</div>
-                <div class="ru">О Аллах, надели нас</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">مِنْ خَشْيَتِكَ مَا يَحُولُ</div>
-                <div class="trsc">мин хашийятика ма яхулю</div>
-                <div class="ru">таким страхом перед Тобой, которого будет достаточно</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">بَيْنَنَا وَبَيْنَ مَعَاصِيكَ</div>
-                <div class="trsc">байнана уа байна ма‘асыка</div>
-                <div class="ru">чтобы отделить нас от непокорности Тебе</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَمِنْ طَاعَتِكَ مَا تُبَلِّغُنَا</div>
-                <div class="trsc">уа мин та‘атика ма тубаллигъуна</div>
-                <div class="ru">и таким повиновением Тебе, которого будет достаточно</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">بِهِ جَنَّتَكَ</div>
-                <div class="trsc">бихи джаннатака</div>
-                <div class="ru">чтобы привести нас к Твоему Раю</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَمِنَ اليَقِينِ مَا تُهَوِّنُ</div>
-                <div class="trsc">уа миналь-якъыни ма тухаууину</div>
-                <div class="ru">и такой убеждённостью, которой будет достаточно</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">بِهِ عَلَيْنَا مُصِيبَاتِ الدُّنْيَا</div>
-                <div class="trsc">бихи ‘алейна мусыбати-ддунья</div>
-                <div class="ru">чтобы невзгоды мира этого казались нам незначительными</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَمَتِّعْنَا بِأَسْمَاعِنَا</div>
-                <div class="trsc">уа матти‘на би-асма‘ина</div>
-                <div class="ru">О Аллах, дай нам пользоваться нашим слухом</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَأَبْصَارِنَا وَقُوَّتِنَا</div>
-                <div class="trsc">уа абсарина уа куввати-на</div>
-                <div class="ru">и зрением, и силой</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">مَا أَحْيَيْتَنَا</div>
-                <div class="trsc">ма ахйайтана</div>
-                <div class="ru">пока Ты будешь поддерживать в нас жизнь</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَاجْعَلْهُ الوَارِثَ مِنَّا</div>
-                <div class="trsc">уадж‘альхуль-уариса минна</div>
-                <div class="ru">и не лишай нас этого до самой смерти</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَاجْعَلْ ثَأْرَنَا</div>
-                <div class="trsc">уадж‘аль са‘рана</div>
-                <div class="ru">и отомсти за нас</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">عَلَى مَنْ ظَلَمَنَا</div>
-                <div class="trsc">‘аля ман залямана</div>
-                <div class="ru">тем, кто нас притеснял</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَانْصُرْنَا عَلَى مَنْ عَادَانَا</div>
-                <div class="trsc">уа-нсурна ‘аля ман ‘адана</div>
-                <div class="ru">и помоги нам против тех, кто враждует с нами</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَلاَ تَجْعَلْ مُصِيبَتَنَا</div>
-                <div class="trsc">уа ля тадж‘аль мусыбатана</div>
-                <div class="ru">и не допусти, чтобы бедствие постигло</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">فِي دِينِنَا</div>
-                <div class="trsc">фи динина</div>
-                <div class="ru">нашу религию</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَلاَ تَجْعَلِ الدُّنْيَا</div>
-                <div class="trsc">уа ля тадж‘али-ддунья</div>
-                <div class="ru">и не делай мир этот</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">أَكْبَرَ هَمِّنَا</div>
-                <div class="trsc">акбара хаммина</div>
-                <div class="ru">самой большой нашей заботой</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَلاَ مَبْلَغَ عِلْمِنَا</div>
-                <div class="trsc">уа ля маблягъа ‘ильмина</div>
-                <div class="ru">ни пределом нашего знания</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَلاَ تُسَلِّطْ عَلَيْنَا</div>
-                <div class="trsc">уа ля тусаллит ‘алейна</div>
-                <div class="ru">и не давай власти над нами</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">مَنْ لاَ يَرْحَمُنَا</div>
-                <div class="trsc">ман ля ярхамуна</div>
-                <div class="ru">тем, кто не проявляет к нам милосердия</div>
-            </div>
+            <div class="fragment"><div class="ar">اللَّهُمَّ اقْسِمْ لَنَا مِنْ خَشْيَتِكَ مَا يَحُولُ بَيْنَنَا وَبَيْنَ مَعَاصِيكَ</div><div class="trsc">Аллахумма-ксим ляна мин хашийятика ма яхулю байнана уа байна ма‘асыка</div><div class="ru">О Аллах, надели нас таким страхом перед Тобой, которого будет достаточно, чтобы отделить нас от непокорности Тебе</div></div>
+            <div class="fragment"><div class="ar">وَمِنْ طَاعَتِكَ مَا تُبَلِّغُنَا بِهِ جَنَّتَكَ</div><div class="trsc">уа мин та‘атика ма тубаллигъуна бихи джаннатака</div><div class="ru">и таким повиновением Тебе, которого будет достаточно, чтобы привести нас к Твоему Раю</div></div>
+            <div class="fragment"><div class="ar">وَمِنَ اليَقِينِ مَا تُهَوِّنُ بِهِ عَلَيْنَا مُصِيبَاتِ الدُّنْيَا</div><div class="trsc">уа миналь-якъыни ма тухаууину бихи ‘алейна мусыбати-ддунья</div><div class="ru">и такой убеждённостью, которой будет достаточно, чтобы невзгоды мира этого казались нам незначительными!</div></div>
+            <div class="fragment"><div class="ar">وَمَتِّعْنَا بِأَسْمَاعِنَا وَأَبْصَارِنَا وَقُوَّتِنَا مَا أَحْيَيْتَنَا</div><div class="trsc">уа-матти‘на би-асма‘ина, уа абсарина уа куввати-на ма ахйайтана</div><div class="ru">О Аллах, дай нам пользоваться нашим слухом, зрением и силой, пока Ты будешь поддерживать в нас жизнь</div></div>
+            <div class="fragment"><div class="ar">وَاجْعَلْهُ الوَارِثَ مِنَّا</div><div class="trsc">уадж‘альхуль-уариса минна</div><div class="ru">и не лишай нас этого до самой смерти.</div></div>
+            <div class="fragment"><div class="ar">وَاجْعَلْ ثَأْرَنَا عَلَى مَنْ ظَلَمَنَا</div><div class="trsc">уадж‘аль са‘рана ‘аля ман залямана</div><div class="ru">И отомсти за нас тем, кто нас притеснял</div></div>
+            <div class="fragment"><div class="ar">وَانْصُرْنَا عَلَى مَنْ عَادَانَا</div><div class="trsc">уа-нсурна ‘аля ман ‘адана</div><div class="ru">и помоги нам против тех, кто враждует с нами</div></div>
+            <div class="fragment"><div class="ar">وَلاَ تَجْعَلْ مُصِيبَتَنَا فِي دِينِنَا</div><div class="trsc">уа ля тадж‘аль мусыбатана фи динина</div><div class="ru">и не допусти, чтобы религию нашу постигло бедствие.</div></div>
+            <div class="fragment"><div class="ar">وَلاَ تَجْعَلِ الدُّنْيَا أَكْبَرَ هَمِّنَا</div><div class="trsc">уа ля тадж‘али-ддунья акбара хаммина</div><div class="ru">И не делай мир этот самой большой нашей заботой</div></div>
+            <div class="fragment"><div class="ar">وَلاَ مَبْلَغَ عِلْمِنَا</div><div class="trsc">уа ля маблягъа ‘ильмина</div><div class="ru">ни пределом нашего знания</div></div>
+            <div class="fragment"><div class="ar">وَلاَ تُسَلِّطْ عَلَيْنَا مَنْ لاَ يَرْحَمُنَا</div><div class="trsc">уа ля тусаллит ‘алейна ман ля ярхамуна</div><div class="ru">и не давай власти над нами тем, кто не проявляет к нам милосердия!</div></div>
         </div>
     </div>
 
     <!-- 5. Защита от плохого соседа и лицемерного друга -->
     <div class="dua-section">
         <div class="title">5. Защита от плохого соседа и лицемерного друга</div>
-        <div class="source">Источник: ат-Табарани «ад-Ду'а» 3/1425, «ас-Сильсиля ас-сахиха» 3137</div>
+        <div class="source">Источник: ат-Табарани «ад-Ду‘а» 3/1425, «ас-Сильсиля ас-сахиха» 3137</div>
         <div class="wrapper">
-            <div class="fragment">
-                <div class="ar">اللَّهُمَّ إِنِّي أَعُوذُ بِكَ</div>
-                <div class="trsc">Аллахумма инни а‘узубика</div>
-                <div class="ru">О Аллах, поистине, я прибегаю к Тебе</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">مِنْ جَارِ السُّوءِ</div>
-                <div class="trsc">мин джари ссу-и</div>
-                <div class="ru">от плохого соседа</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَمِنْ زَوْجٍ تُشَيِّبُنِي</div>
-                <div class="trsc">уа мин зауджин тушаййибуни</div>
-                <div class="ru">и от жены, от которой я поседею</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">قَبْلَ الْمَشِيبِ</div>
-                <div class="trsc">кабляль-машиб</div>
-                <div class="ru">раньше времени</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَمِنْ وَلَدٍ يَكُونُ عَلَيَّ</div>
-                <div class="trsc">уа мин уалядин якуну ‘аляйа</div>
-                <div class="ru">и от ребёнка, который станет надо мной</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">رَبًّا</div>
-                <div class="trsc">раббан</div>
-                <div class="ru">господином</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَمِنْ مَالٍ يَكُونُ عَلَيَّ</div>
-                <div class="trsc">уа мин малин якуну ‘аляйа</div>
-                <div class="ru">и от имущества, которое станет для меня</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">عَذَابًا</div>
-                <div class="trsc">‘азабан</div>
-                <div class="ru">мучением</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَمِنْ خَلِيلٍ مَاكِرٍ</div>
-                <div class="trsc">уа мин халилин макирин</div>
-                <div class="ru">и от коварного друга</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">عَيْنُهُ تَرَانِي</div>
-                <div class="trsc">‘айнуху тарани</div>
-                <div class="ru">глаз которого меня видит</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَقَلْبُهُ يَرْعَانِي</div>
-                <div class="trsc">уа кальбуху яр‘ани</div>
-                <div class="ru">а сердце подстерегает</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">إِنْ رَأَى حَسَنَةً دَفَنَهَا</div>
-                <div class="trsc">ин ра-а хасанатан дафанаха</div>
-                <div class="ru">если он видит во мне хорошее, то скрывает</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَإِذَا رَأَى سَيِّئَةً أَذَاعَهَا</div>
-                <div class="trsc">уа иза ра-а саййиатан аза‘аха</div>
-                <div class="ru">а если видит дурное, то разглашает</div>
-            </div>
+            <div class="fragment"><div class="ar">اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنْ جَارِ السُّوءِ</div><div class="trsc">Аллахумма инни а‘узубика мин джари ссу-и</div><div class="ru">О Аллах, поистине, я прибегаю к Тебе за защитой от плохого соседа</div></div>
+            <div class="fragment"><div class="ar">وَمِنْ زَوْجٍ تُشَيِّبُنِي قَبْلَ الْمَشِيبِ</div><div class="trsc">уа мин зауджин тушайибуни кабляль-машиб</div><div class="ru">и жены, от которой я поседею раньше времени</div></div>
+            <div class="fragment"><div class="ar">وَمِنْ وَلَدٍ يَكُونُ عَلَيَّ رَبًّا</div><div class="trsc">уа мин уалядин якуну ‘аляйа раббан</div><div class="ru">от ребёнка, который станет надо мной господином</div></div>
+            <div class="fragment"><div class="ar">وَمِنْ مَالٍ يَكُونُ عَلَيَّ عَذَابًا</div><div class="trsc">уа мин малин якуну ‘аляйа ‘азабан</div><div class="ru">от имущества, которое станет для меня мучением</div></div>
+            <div class="fragment"><div class="ar">وَمِنْ خَلِيلٍ مَاكِرٍ عَيْنُهُ تَرَانِي</div><div class="trsc">уа мин халилин макирин ‘айнуху тарани</div><div class="ru">от коварного друга, глаз которого меня видит</div></div>
+            <div class="fragment"><div class="ar">وَقَلْبُهُ يَرْعَانِي</div><div class="trsc">уа кальбуху яр‘ани</div><div class="ru">а сердце подстерегает</div></div>
+            <div class="fragment"><div class="ar">إِنْ رَأَى حَسَنَةً دَفَنَهَا</div><div class="trsc">ин ра-а хасанатан дафанаха</div><div class="ru">если он видит во мне нечто хорошее, то скрывает</div></div>
+            <div class="fragment"><div class="ar">وَإِذَا رَأَى سَيِّئَةً أَذَاعَهَا</div><div class="trsc">уа иза ра-а сайиатан аза‘аха</div><div class="ru">а если видит дурное, то разглашает это!</div></div>
         </div>
     </div>
 
     <!-- 6. Об украшении нрава -->
     <div class="dua-section">
         <div class="title">6. Об украшении нрава</div>
-        <div class="source">Источник: Ахмад 1/403, «Сахих аль-джами'» 1307</div>
+        <div class="source">Источник: Ахмад 1/403, «Сахих аль-джами‘» 1307</div>
         <div class="wrapper">
-            <div class="fragment">
-                <div class="ar">اللَّهُمَّ كَمَا حَسَّنْتَ خَلْقِي</div>
-                <div class="trsc">Аллахумма кама хассанта хальки</div>
-                <div class="ru">О Аллах, подобно тому, как Ты сделал прекрасным моё творение</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">فَحَسِّنْ خُلُقِي</div>
-                <div class="trsc">фа-хассин хулюки</div>
-                <div class="ru">усовершенствуй так же мой нрав</div>
-            </div>
+            <div class="fragment"><div class="ar">اللَّهُمَّ كَمَا حَسَّنْتَ خَلْقِي</div><div class="trsc">Аллахумма кама хассанта хальки</div><div class="ru">О Аллах, подобно тому, как Ты сделал прекрасным моё творение</div></div>
+            <div class="fragment"><div class="ar">فَحَسِّنْ خُلُقِي</div><div class="trsc">фа-хассин хулюки</div><div class="ru">усовершенствуй так же мой нрав!</div></div>
         </div>
     </div>
 
     <!-- 7. Защита от шайтанов (слова Джибриля) -->
     <div class="dua-section">
-        <div class="title">7. Защита от шайтанов (слова Джибриля)</div>
-        <div class="source">Источник: Ахмад 3/419, Абу Я'ля 12/237, «Сахих аль-джами'» 74</div>
+        <div class="title">7. Защита от шайтанов (слова Джибриля ﷺ)</div>
+        <div class="source">Источник: Ахмад 3/419, Абу Я‘ля 12/237, «Сахих аль-джами‘» 74</div>
         <div class="wrapper">
-            <div class="fragment">
-                <div class="ar">أَعُوذُ بِكَلِمَاتِ اللَّهِ التَّامَّاتِ</div>
-                <div class="trsc">А‘узу би-калимати-Лляхи тта-мма-ти</div>
-                <div class="ru">Прибегаю посредством совершенных Слов Аллаха</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">الَّتِي لاَ يُجَاوِزُهُنَّ</div>
-                <div class="trsc">алляти ля юджавизухунна</div>
-                <div class="ru">возвыситься над которыми не в силах</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">بَرٌّ وَلاَ فَاجِرٌ</div>
-                <div class="trsc">баррун уа ля фаджирун</div>
-                <div class="ru">ни праведный, ни нечестивый</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">مِنْ شَرِّ مَا خَلَقَ</div>
-                <div class="trsc">мин шарри ма халяк</div>
-                <div class="ru">от зла того, что Он сотворил</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَبَرَأَ وَذَرَأَ</div>
-                <div class="trsc">уа бара-а уа зара-а</div>
-                <div class="ru">создал и сделал</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَمِنْ شَرِّ مَا يَنْزِلُ</div>
-                <div class="trsc">уа мин шарри ма янзилю</div>
-                <div class="ru">и от зла того, что нисходит</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">مِنَ السَّمَاءِ</div>
-                <div class="trsc">мина-ссама-и</div>
-                <div class="ru">с небес</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَمِنْ شَرِّ مَا يَعْرُجُ فِيهَا</div>
-                <div class="trsc">уа мин шарри ма я‘руджу фиха</div>
-                <div class="ru">и от зла того, что восходит к ним</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَمِنْ شَرِّ مَا ذَرَأَ</div>
-                <div class="trsc">уа мин шарри ма зара-а</div>
-                <div class="ru">и от зла того, что Он создал</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">فِي الأَرْضِ</div>
-                <div class="trsc">филь-ард</div>
-                <div class="ru">в земле</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَمِنْ شَرِّ مَا يَخْرُجُ مِنْهَا</div>
-                <div class="trsc">уа мин шарри ма яхруджу минха</div>
-                <div class="ru">и от зла того, что выходит из неё</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَمِنْ شَرِّ فِتَنِ اللَّيْلِ</div>
-                <div class="trsc">уа мин шарри фитани-ллейли</div>
-                <div class="ru">и от зла искушений ночи</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَالنَّهَارِ</div>
-                <div class="trsc">уан-нахар</div>
-                <div class="ru">и дня</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَمِنْ شَرِّ كُلِّ طَارِقٍ</div>
-                <div class="trsc">уа мин шарри кулли таркъин</div>
-                <div class="ru">и от зла всякого приходящего ночью</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">إِلاَّ طَارِقًا يَطْرُقُ بِخَيْرٍ</div>
-                <div class="trsc">илля тарикъан ятрукъу би-хайрин</div>
-                <div class="ru">кроме того, кто приносит с собой благо</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">يَا رَحْمَنُ</div>
-                <div class="trsc">йа Рахман</div>
-                <div class="ru">о Милостивый</div>
-            </div>
+            <div class="fragment"><div class="ar">أَعُوذُ بِكَلِمَاتِ اللَّهِ التَّامَّاتِ</div><div class="trsc">А‘узу би-калимати-Лляхи тта-мма-ти</div><div class="ru">Прибегаю посредством совершенных Слов Аллаха</div></div>
+            <div class="fragment"><div class="ar">الَّتِي لاَ يُجَاوِزُهُنَّ بَرٌّ وَلاَ فَاجِرٌ</div><div class="trsc">алляти ля юджауизухунна баррун уа ля фаджирун</div><div class="ru">возвыситься над которыми не в силах ни праведный, ни нечестивый</div></div>
+            <div class="fragment"><div class="ar">مِنْ شَرِّ مَا خَلَقَ وَبَرَأَ وَذَرَأَ</div><div class="trsc">мин шарри ма халяк уа бара-а уа зара-а</div><div class="ru">от зла того, что Он сотворил, создал и сделал</div></div>
+            <div class="fragment"><div class="ar">وَمِنْ شَرِّ مَا يَنْزِلُ مِنَ السَّمَاءِ</div><div class="trsc">уа мин шарри ма янзилю мина-ссама-и</div><div class="ru">от зла того, что нисходит с небес</div></div>
+            <div class="fragment"><div class="ar">وَمِنْ شَرِّ مَا يَعْرُجُ فِيهَا</div><div class="trsc">уа мин шарри ма я‘руджу фиха</div><div class="ru">и от зла того, что восходит к ним</div></div>
+            <div class="fragment"><div class="ar">وَمِنْ شَرِّ مَا ذَرَأَ فِي الأَرْضِ</div><div class="trsc">уа мин шарри ма зара-а филь-ард</div><div class="ru">от зла того, что Он создал в земле</div></div>
+            <div class="fragment"><div class="ar">وَمِنْ شَرِّ مَا يَخْرُجُ مِنْهَا</div><div class="trsc">уа мин шарри ма яхруджу минха</div><div class="ru">и от зла того, что выходит из неё</div></div>
+            <div class="fragment"><div class="ar">وَمِنْ شَرِّ فِتَنِ اللَّيْلِ وَالنَّهَارِ</div><div class="trsc">уа мин шарри фитани-ллейли уан-нахар</div><div class="ru">от зла искушений ночи и дня</div></div>
+            <div class="fragment"><div class="ar">وَمِنْ شَرِّ كُلِّ طَارِقٍ</div><div class="trsc">уа мин шарри кулли таркъин</div><div class="ru">и от зла всякого приходящего ночью</div></div>
+            <div class="fragment"><div class="ar">إِلاَّ طَارِقًا يَطْرُقُ بِخَيْرٍ يَا رَحْمَنُ</div><div class="trsc">илля тарикъан ятрукъу би-хайрин йа Рахман</div><div class="ru">кроме того, кто приносит с собой благо, о Милостивый!</div></div>
         </div>
     </div>
 
-    <!-- 8. Между двумя земными поклонами -->
+    <!-- 8. Между двумя земными поклонами в намазе -->
     <div class="dua-section">
-        <div class="title">8. Между двумя земными поклонами</div>
+        <div class="title">8. Между двумя земными поклонами в намазе</div>
         <div class="source">Источник: Абу Дауд 850, ат-Тирмизи 284, Ибн Маджах 898</div>
         <div class="wrapper">
-            <div class="fragment">
-                <div class="ar">اللَّهُمَّ اغْفِرْ لِي</div>
-                <div class="trsc">Аллахумма-гъфирли</div>
-                <div class="ru">О Аллах, прости меня</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَارْحَمْنِي</div>
-                <div class="trsc">уархамни</div>
-                <div class="ru">и помилуй меня</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَاجْبُرْنِي</div>
-                <div class="trsc">уаджбурни</div>
-                <div class="ru">и восполни мне (потери)</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَارْفَعْنِي</div>
-                <div class="trsc">уарфа‘ни</div>
-                <div class="ru">и возвысь меня</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَاهْدِنِي</div>
-                <div class="trsc">уахдини</div>
-                <div class="ru">и направь меня</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَعَافِنِي</div>
-                <div class="trsc">уа‘афини</div>
-                <div class="ru">и даруй мне благополучие</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَارْزُقْنِي</div>
-                <div class="trsc">уарзукни</div>
-                <div class="ru">и надели меня уделом</div>
-            </div>
+            <div class="fragment"><div class="ar">اللَّهُمَّ اغْفِرْ لِي</div><div class="trsc">Аллахумма-гъфирли</div><div class="ru">О Аллах, прости меня</div></div>
+            <div class="fragment"><div class="ar">وَارْحَمْنِي</div><div class="trsc">уархамни</div><div class="ru">помилуй меня</div></div>
+            <div class="fragment"><div class="ar">وَاجْبُرْنِي</div><div class="trsc">уаджбурни</div><div class="ru">восполни мне (потери)</div></div>
+            <div class="fragment"><div class="ar">وَارْفَعْنِي</div><div class="trsc">уарфа‘ни</div><div class="ru">возвысь меня</div></div>
+            <div class="fragment"><div class="ar">وَاهْدِنِي</div><div class="trsc">уахдини</div><div class="ru">направь меня на прямой путь</div></div>
+            <div class="fragment"><div class="ar">وَعَافِنِي</div><div class="trsc">уа‘афини</div><div class="ru">даруй мне благополучие</div></div>
+            <div class="fragment"><div class="ar">وَارْزُقْنِي</div><div class="trsc">уарзукни</div><div class="ru">и надели меня уделом!</div></div>
         </div>
     </div>
 
@@ -1166,122 +435,38 @@ window.createTextSettings = createTextSettings;
         <div class="title">9. Господин среди мольб о прощении (Сайид аль-истигъфар)</div>
         <div class="source">Источник: аль-Бухари 6306</div>
         <div class="wrapper">
-            <div class="fragment">
-                <div class="ar">اللَّهُمَّ أَنْتَ رَبِّي</div>
-                <div class="trsc">Аллахумма, Анта Рабби</div>
-                <div class="ru">О Аллах, Ты — Господь мой</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">لاَ إِلَهَ إِلاَّ أَنْتَ</div>
-                <div class="trsc">ля иляха илля Анта</div>
-                <div class="ru">нет никого достойного поклонения, кроме Тебя</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">خَلَقْتَنِي وَأَنَا عَبْدُكَ</div>
-                <div class="trsc">халякта-ни ва ана ‘абду-Кя</div>
-                <div class="ru">Ты создал меня, и я — Твой раб</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَأَنَا عَلَى عَهْدِكَ وَوَعْدِكَ</div>
-                <div class="trsc">ва ана ‘аля ‘ахди-Кя ва ва‘ди-кя</div>
-                <div class="ru">и я буду верен обещанию и договору с Тобой</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">مَا اسْتَطَعْتُ</div>
-                <div class="trsc">ма-стата‘ту</div>
-                <div class="ru">покуда у меня хватит сил</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">أَعُوذُ بِكَ مِنْ شَرِّ مَا صَنَعْتُ</div>
-                <div class="trsc">А‘узу би-Кя мин шарри ма сана‘ту</div>
-                <div class="ru">Прибегаю к Твоей защите от зла того, что я сделал</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">أَبُوءُ لَكَ بِنِعْمَتِكَ عَلَيَّ</div>
-                <div class="trsc">абу‘у ля-Кя би-ни‘мати-Кя ‘аляййа</div>
-                <div class="ru">признаю милость, оказанную Тобой мне</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَأَبُوءُ لَكَ بِذَنْبِي</div>
-                <div class="trsc">ва абу‘у ля-Кя би-занби</div>
-                <div class="ru">и признаю грех свой</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">فَاغْفِرْ لِي</div>
-                <div class="trsc">фа-гфир ли</div>
-                <div class="ru">прости же меня</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">فَإِنَّهُ لاَ يَغْفِرُ الذُّنُوبَ</div>
-                <div class="trsc">фа-инна-ху ля йагфиру-з-зунуба</div>
-                <div class="ru">ибо, поистине, никто не прощает грехов</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">إِلاَّ أَنْتَ</div>
-                <div class="trsc">илля Анта</div>
-                <div class="ru">кроме Тебя</div>
-            </div>
+            <div class="fragment"><div class="ar">اللَّهُمَّ أَنْتَ رَبِّي</div><div class="trsc">Аллахумма, Анта Рабби</div><div class="ru">О Аллах, Ты — Господь мой</div></div>
+            <div class="fragment"><div class="ar">لاَ إِلَهَ إِلاَّ أَنْتَ</div><div class="trsc">ля иляха илля Анта</div><div class="ru">и нет никого достойного поклонения, кроме Тебя</div></div>
+            <div class="fragment"><div class="ar">خَلَقْتَنِي وَأَنَا عَبْدُكَ</div><div class="trsc">халякта-ни ва ана ‘абду-Кя</div><div class="ru">Ты создал меня и я — Твой раб</div></div>
+            <div class="fragment"><div class="ar">وَأَنَا عَلَى عَهْدِكَ وَوَعْدِكَ مَا اسْتَطَعْتُ</div><div class="trsc">ва ана ‘аля ‘ахди-Кя ва ва‘ди-кя ма-стата‘ту</div><div class="ru">и я буду верен обещанию и договору с Тобой, покуда у меня хватит сил.</div></div>
+            <div class="fragment"><div class="ar">أَعُوذُ بِكَ مِنْ شَرِّ مَا صَنَعْتُ</div><div class="trsc">А‘узу би-Кя мин шарри ма сана‘ту</div><div class="ru">Прибегаю к Твоей защите от зла того, что я сделал</div></div>
+            <div class="fragment"><div class="ar">أَبُوءُ لَكَ بِنِعْمَتِكَ عَلَيَّ</div><div class="trsc">абу‘у ля-Кя би-ни‘мати-Кя ‘аляййа</div><div class="ru">признаю милость, оказанную Тобой мне</div></div>
+            <div class="fragment"><div class="ar">وَأَبُوءُ لَكَ بِذَنْبِي</div><div class="trsc">ва абу‘у ля-Кя би-занби</div><div class="ru">и признаю грех свой</div></div>
+            <div class="fragment"><div class="ar">فَاغْفِرْ لِي</div><div class="trsc">фа-гфир ли</div><div class="ru">прости же меня</div></div>
+            <div class="fragment"><div class="ar">فَإِنَّهُ لاَ يَغْفِرُ الذُّنُوبَ إِلاَّ أَنْتَ</div><div class="trsc">фа-инна-ху ля йагфиру-з-зунуба илля Анта</div><div class="ru">ибо, поистине, никто не прощает грехов, кроме Тебя!</div></div>
         </div>
     </div>
 
-    <!-- 10. Прощение грехов — мольба Абу Бакра -->
+    <!-- 10. Прощение грехов — мольба Абу Бакра ас-Сиддыка -->
     <div class="dua-section">
-        <div class="title">10. Прощение грехов — мольба Абу Бакра</div>
+        <div class="title">10. Прощение грехов — мольба Абу Бакра ас-Сиддыка</div>
         <div class="source">Источник: аль-Бухари 6326, 7386, 7387; Муслим 2705</div>
         <div class="wrapper">
-            <div class="fragment">
-                <div class="ar">اللَّهُمَّ إِنِّي ظَلَمْتُ نَفْسِي</div>
-                <div class="trsc">Аллахумма, инни залямту нафси</div>
-                <div class="ru">О Аллах, поистине, я обижал самого себя</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">ظُلْمًا كَثِيرًا</div>
-                <div class="trsc">зульман касиран</div>
-                <div class="ru">много раз</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَلاَ يَغْفِرُ الذُّنُوبَ إِلاَّ أَنْتَ</div>
-                <div class="trsc">уа ля йагфиру-з-зунуба илля Анта</div>
-                <div class="ru">а никто, кроме Тебя, не прощает грехов</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">فَاغْفِرْ لِي مَغْفِرَةً</div>
-                <div class="trsc">фа-гфир ли магфиратан</div>
-                <div class="ru">Прости же меня прощением</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">مِنْ عِنْدِكَ</div>
-                <div class="trsc">мин ‘инди-кя</div>
-                <div class="ru">от Тебя</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَارْحَمْنِي</div>
-                <div class="trsc">уа-рхам-ни</div>
-                <div class="ru">и помилуй меня</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">إِنَّكَ أَنْتَ الْغَفُورُ الرَّحِيمُ</div>
-                <div class="trsc">инна-кя Анта-ль-Гафуру-р-Рахиму</div>
-                <div class="ru">поистине, Ты — Прощающий, Милосердный</div>
-            </div>
+            <div class="fragment"><div class="ar">اللَّهُمَّ إِنِّي ظَلَمْتُ نَفْسِي ظُلْمًا كَثِيرًا</div><div class="trsc">Аллахумма, инни залямту нафси зульман касиран</div><div class="ru">О Аллах, поистине, я обижал самого себя много раз</div></div>
+            <div class="fragment"><div class="ar">وَلَا يَغْفِرُ الذُّنُوبَ إِلَّا أَنْتَ</div><div class="trsc">уа ля йагфиру-з-зунуба илля Анта</div><div class="ru">а никто, кроме Тебя, не прощает грехов!</div></div>
+            <div class="fragment"><div class="ar">فَاغْفِرْ لِي مَغْفِرَةً مِنْ عِنْدِكَ</div><div class="trsc">фа-гфир ли магфиратан мин ‘инди-кя</div><div class="ru">Прости же меня, и даруй мне Своё прощение</div></div>
+            <div class="fragment"><div class="ar">وَارْحَمْنِي</div><div class="trsc">уа-рхам-ни</div><div class="ru">и помилуй меня</div></div>
+            <div class="fragment"><div class="ar">إِنَّكَ أَنْتَ الْغَفُورُ الرَّحِيمُ</div><div class="trsc">инна-кя Анта-ль-Гафуру-р-Рахиму</div><div class="ru">поистине, Ты — Прощающий, Милосердный!</div></div>
         </div>
     </div>
 
-    <!-- 11. О стойкости сердца -->
+    <!-- 11. О стойкости сердца на Его религии -->
     <div class="dua-section">
-        <div class="title">11. О стойкости сердца</div>
-        <div class="source">Источник: Муслим, ат-Тирмизи 2066, «Сахих аль-джами'» 7864</div>
+        <div class="title">11. О стойкости сердца на Его религии</div>
+        <div class="source">Источник: Муслим, ат-Тирмизи 2066, «Сахих аль-джами‘» 7864</div>
         <div class="wrapper">
-            <div class="fragment">
-                <div class="ar">يَا مُقَلِّبَ الْقُلُوبِ</div>
-                <div class="trsc">Йа мукаллиб-аль-кулюби</div>
-                <div class="ru">О Переворачивающий сердца</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">ثَبِّتْ قَلْبِي عَلَى دِينِكَ</div>
-                <div class="trsc">саббит кальби ‘аля диник</div>
-                <div class="ru">укрепи моё сердце на Твоей религии</div>
-            </div>
+            <div class="fragment"><div class="ar">يَا مُقَلِّبَ الْقُلُوبِ</div><div class="trsc">Йа мукаллиб-аль-кулюби</div><div class="ru">О Переворачивающий сердца</div></div>
+            <div class="fragment"><div class="ar">ثَبِّتْ قَلْبِي عَلَى دِينِكَ</div><div class="trsc">саббит кальби ‘аля диник</div><div class="ru">укрепи моё сердце на Своей религии!</div></div>
         </div>
     </div>
 
@@ -1290,44 +475,19 @@ window.createTextSettings = createTextSettings;
         <div class="title">12. Мольба из Корана (аль-Бакара 2:201)</div>
         <div class="source">Источник: аль-Бухари, Муслим</div>
         <div class="wrapper">
-            <div class="fragment">
-                <div class="ar">رَبَّنَا آتِنَا فِي الدُّنْيَا</div>
-                <div class="trsc">Раббана атина фи-ддунья</div>
-                <div class="ru">Господь наш! Даруй нам в этой жизни</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">حَسَنَةً</div>
-                <div class="trsc">хасанатан</div>
-                <div class="ru">благополучие</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَفِي الآخِرَةِ حَسَنَةً</div>
-                <div class="trsc">уа филь-ахирати хасанатан</div>
-                <div class="ru">и в жизни будущей даруй благополучие</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَقِنَا عَذَابَ النَّارِ</div>
-                <div class="trsc">уа кына ‘азаба-ннар</div>
-                <div class="ru">и защити нас от адского наказания</div>
-            </div>
+            <div class="fragment"><div class="ar">رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً</div><div class="trsc">Раббана атина фи-ддунья хасанатан</div><div class="ru">Господь наш! Даруй нам благополучие в этой жизни</div></div>
+            <div class="fragment"><div class="ar">وَفِي الآخِرَةِ حَسَنَةً</div><div class="trsc">уа филь-ахирати хасанатан</div><div class="ru">и даруй нам благополучие в жизни будущей</div></div>
+            <div class="fragment"><div class="ar">وَقِنَا عَذَابَ النَّارِ</div><div class="trsc">уа кына ‘азаба-ннар</div><div class="ru">и защити нас от адского наказания!</div></div>
         </div>
     </div>
 
-    <!-- 13. О прощении и благополучии -->
+    <!-- 13. О прощении и благополучии (аль-'афу уаль-'афия) -->
     <div class="dua-section">
-        <div class="title">13. О прощении и благополучии</div>
+        <div class="title">13. О прощении и благополучии (аль-‘афу уаль-‘афия)</div>
         <div class="source">Источник: ат-Тирмизи 3558, «Сахих ат-таргъиб» 3387</div>
         <div class="wrapper">
-            <div class="fragment">
-                <div class="ar">اللَّهُمَّ إِنِّي أَسْأَلُكَ</div>
-                <div class="trsc">Аллахумма инни ас-алюка</div>
-                <div class="ru">О Аллах, поистине, я прошу Тебя</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">الْعَفْوَ وَالْعَافِيَةَ</div>
-                <div class="trsc">аль-‘афуа уаль-‘афия</div>
-                <div class="ru">о прощении и благополучии</div>
-            </div>
+            <div class="fragment"><div class="ar">اللَّهُمَّ إِنِّي أَسْأَلُكَ الْعَفْوَ</div><div class="trsc">Аллахумма инни ас-алюка аль-‘афуа</div><div class="ru">О Аллах, поистине, я прошу Тебя о прощении</div></div>
+            <div class="fragment"><div class="ar">وَالْعَافِيَةَ</div><div class="trsc">уаль-‘афия</div><div class="ru">и благополучии!</div></div>
         </div>
     </div>
 
@@ -1336,149 +496,30 @@ window.createTextSettings = createTextSettings;
         <div class="title">14. О благополучии в обоих мирах</div>
         <div class="source">Источник: Ибн Маджах 3851, «Сахих ат-таргъиб» 3388</div>
         <div class="wrapper">
-            <div class="fragment">
-                <div class="ar">اللَّهُمَّ إِنِّي أَسْأَلُكَ</div>
-                <div class="trsc">Аллахумма инни ас-алюка</div>
-                <div class="ru">О Аллах, поистине, я прошу Тебя</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">الْمُعَافَاةَ فِي الدُّنْيَا</div>
-                <div class="trsc">аль-му‘афата фи-ддунья</div>
-                <div class="ru">о благополучии в мире этом</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَالآخِرَةِ</div>
-                <div class="trsc">уаль-ахира</div>
-                <div class="ru">и в мире ином</div>
-            </div>
+            <div class="fragment"><div class="ar">اللَّهُمَّ إِنِّي أَسْأَلُكَ الْمُعَافَاةَ فِي الدُّنْيَا</div><div class="trsc">Аллахумма инни ас-алюка аль-му‘афата фи-ддунья</div><div class="ru">О Аллах, поистине, я прошу Тебя о благополучии в мире этом</div></div>
+            <div class="fragment"><div class="ar">وَالْآخِرَةِ</div><div class="trsc">уаль-ахира</div><div class="ru">и в мире ином!</div></div>
         </div>
     </div>
 
     <!-- 15. О знании сокровенного и жизни во благо -->
     <div class="dua-section">
         <div class="title">15. О знании сокровенного и жизни во благо</div>
-        <div class="source">Источник: Ахмад 30/265, Сахих ан-Насаи 1304, «Сахих аль-джами'» 1301</div>
+        <div class="source">Источник: Ахмад 30/265, Сахих ан-Насаи 1304, «Сахих аль-джами‘» 1301</div>
         <div class="wrapper">
-            <div class="fragment">
-                <div class="ar">اللَّهُمَّ بِعِلْمِكَ الْغَيْبَ</div>
-                <div class="trsc">Аллахумма би ‘ильмикаль-гъайба</div>
-                <div class="ru">О Аллах, посредством Твоего знания о сокровенном</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَقُدْرَتِكَ عَلَى الْخَلْقِ</div>
-                <div class="trsc">уа кудратика ‘аляль-халькъи</div>
-                <div class="ru">и Твоей власти над творением</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">أَحْيِنِي مَا عَلِمْتَ الْحَيَاةَ</div>
-                <div class="trsc">ахьини ма ‘алимталь-хаята</div>
-                <div class="ru">дай мне жить, если знаешь, что жизнь</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">خَيْرًا لِي</div>
-                <div class="trsc">хайран ли</div>
-                <div class="ru">во благо мне</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَتَوَفَّنِي إِذَا عَلِمْتَ الْوَفَاةَ</div>
-                <div class="trsc">уа тауаффани иза ‘алимталь-уафата</div>
-                <div class="ru">и умертви меня, если знаешь, что смерть</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">خَيْرًا لِي</div>
-                <div class="trsc">хайран ли</div>
-                <div class="ru">во благо мне</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">اللَّهُمَّ إِنِّي أَسْأَلُكَ خَشْيَتَكَ</div>
-                <div class="trsc">Аллахумма инни ас-алюка хашйатака</div>
-                <div class="ru">О Аллах, я прошу у Тебя богобоязненности</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">فِي الْغَيْبِ وَالشَّهَادَةِ</div>
-                <div class="trsc">филь-гъойби уа-шшахада</div>
-                <div class="ru">в одиночестве и при людях</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَأَسْأَلُكَ كَلِمَةَ الْحَقِّ</div>
-                <div class="trsc">уа ас-алюка калиматаль-хаккъи</div>
-                <div class="ru">и прошу Тебя (сделать меня говорящим) слово истины</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">فِي الرِّضَا وَالْغَضَبِ</div>
-                <div class="trsc">фи-ррида уаль-гъадаб</div>
-                <div class="ru">в довольстве и в гневе</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَأَسْأَلُكَ الْقَصْدَ</div>
-                <div class="trsc">уа ас-алюкаль-касда</div>
-                <div class="ru">и прошу Тебя об умеренности</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">فِي الْغِنَى وَالْفَقْرِ</div>
-                <div class="trsc">филь-гъина уаль-факр</div>
-                <div class="ru">в богатстве и бедности</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَأَسْأَلُكَ نَعِيمًا لاَ يَنْفَدُ</div>
-                <div class="trsc">уа ас-алюка на‘иман ля янфад</div>
-                <div class="ru">и прошу Тебя о неиссякаемом блаженстве</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَأَسْأَلُكَ قُرَّةَ عَيْنٍ</div>
-                <div class="trsc">уа ас-алюка куррата ‘айнин</div>
-                <div class="ru">и прошу Тебя о радости очей</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">لاَ تَنْقَطِعُ</div>
-                <div class="trsc">ля танкъаты‘</div>
-                <div class="ru">которая не кончается</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَأَسْأَلُكَ الرِّضَا بَعْدَ الْقَضَاءِ</div>
-                <div class="trsc">уа ас-алюка-ррида ба‘даль-када</div>
-                <div class="ru">и прошу Тебя о довольстве после предначертанного</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَأَسْأَلُكَ بَرْدَ الْعَيْشِ</div>
-                <div class="trsc">уа ас-алюка бардаль-‘айши</div>
-                <div class="ru">и прошу Тебя об умиротворённой жизни</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">بَعْدَ الْمَوْتِ</div>
-                <div class="trsc">ба‘даль-маут</div>
-                <div class="ru">после смерти</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَأَسْأَلُكَ لَذَّةَ النَّظَرِ</div>
-                <div class="trsc">уа ас-алюка ляззата-нназари</div>
-                <div class="ru">и прошу Тебя о наслаждении смотреть</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">إِلَى وَجْهِكَ</div>
-                <div class="trsc">иля уаджхика</div>
-                <div class="ru">на Твоё Лицо</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَالشَّوْقَ إِلَى لِقَائِكَ</div>
-                <div class="trsc">уа-шшаукъа иля ликъа-ик</div>
-                <div class="ru">и о тоске ко встрече с Тобой</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">اللَّهُمَّ زَيِّنَّا</div>
-                <div class="trsc">Аллахумма заййинна</div>
-                <div class="ru">О Аллах, укрась нас</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">بِزِينَةِ الإِيمَانِ</div>
-                <div class="trsc">би зинатиль-иман</div>
-                <div class="ru">украшением веры</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَاجْعَلْنَا هُدَاةً مُهْتَدِينَ</div>
-                <div class="trsc">уадж‘альна худатан мухтадин</div>
-                <div class="ru">и сделай нас ведущими и ведомыми по прямому пути</div>
-            </div>
+            <div class="fragment"><div class="ar">اللَّهُمَّ بِعِلْمِكَ الْغَيْبَ وَقُدْرَتِكَ عَلَى الْخَلْقِ</div><div class="trsc">Аллахумма би ‘ильмикаль-гъайба уа кудратика ‘аляль-халькъи</div><div class="ru">О Аллах, я взываю к Тебе посредством Твоего знания о сокровенном и Твоей власти над всем сотворённым</div></div>
+            <div class="fragment"><div class="ar">أَحْيِنِي مَا عَلِمْتَ الْحَيَاةَ خَيْرًا لِي</div><div class="trsc">ахьини ма ‘алимталь-хаята хайран ли</div><div class="ru">дай мне жить, если знаешь, что жизнь во благо мне</div></div>
+            <div class="fragment"><div class="ar">وَتَوَفَّنِي إِذَا عَلِمْتَ الْوَفَاةَ خَيْرًا لِي</div><div class="trsc">уа тауаффани иза ‘алимталь-уафата хайран ли</div><div class="ru">и умертви меня, если знаешь, что в смерти для меня больше пользы.</div></div>
+            <div class="fragment"><div class="ar">اللَّهُمَّ إِنِّي أَسْأَلُكَ خَشْيَتَكَ فِي الْغَيْبِ وَالشَّهَادَةِ</div><div class="trsc">Аллахумма инни ас-алюка хашйатака филь-гъойби уа-шшахада</div><div class="ru">О Аллах, я прошу у Тебя богобоязненности в одиночестве и при людях</div></div>
+            <div class="fragment"><div class="ar">وَأَسْأَلُكَ كَلِمَةَ الْحَقِّ فِي الرِّضَا وَالْغَضَبِ</div><div class="trsc">уа ас-алюка калиматаль-хаккъи фи-ррида уаль-гъадаб</div><div class="ru">прошу Тебя сделать меня говорящим истину в довольстве и в гневе</div></div>
+            <div class="fragment"><div class="ar">وَأَسْأَلُكَ الْقَصْدَ فِي الْغِنَى وَالْفَقْرِ</div><div class="trsc">уа ас-алюкаль-касда филь-гъина уаль-факр</div><div class="ru">прошу Тебя об умеренности в богатстве и бедности</div></div>
+            <div class="fragment"><div class="ar">وَأَسْأَلُكَ نَعِيمًا لاَ يَنْفَدُ</div><div class="trsc">уа ас-алюка на‘иман ля янфад</div><div class="ru">о неиссякаемом блаженстве</div></div>
+            <div class="fragment"><div class="ar">وَأَسْأَلُكَ قُرَّةَ عَيْنٍ لاَ تَنْقَطِعُ</div><div class="trsc">уа ас-алюка куррата ‘айнин ля танкъаты‘</div><div class="ru">о нескончаемой радости очей моих</div></div>
+            <div class="fragment"><div class="ar">وَأَسْأَلُكَ الرِّضَا بَعْدَ الْقَضَاءِ</div><div class="trsc">уа ас-алюка-ррида ба‘даль-када</div><div class="ru">о довольстве после свершения предначертанного</div></div>
+            <div class="fragment"><div class="ar">وَأَسْأَلُكَ بَرْدَ الْعَيْشِ بَعْدَ الْمَوْتِ</div><div class="trsc">уа ас-алюка бардаль-‘айши ба‘даль-маут</div><div class="ru">об умиротворённой жизни после смерти</div></div>
+            <div class="fragment"><div class="ar">وَأَسْأَلُكَ لَذَّةَ النَّظَرِ إِلَى وَجْهِكَ</div><div class="trsc">уа ас-алюка ляззата-нназари иля уаджхика</div><div class="ru">о наслаждении смотреть на Твоё Лицо</div></div>
+            <div class="fragment"><div class="ar">وَالشَّوْقَ إِلَى لِقَائِكَ</div><div class="trsc">уа-шшаукъа иля ликъа-ик</div><div class="ru">и тоске ко встрече с Тобой.</div></div>
+            <div class="fragment"><div class="ar">اللَّهُمَّ زَيِّنَّا بِزِينَةِ الإِيمَانِ</div><div class="trsc">Аллахумма заййинна би зинатиль-иман</div><div class="ru">О Аллах, укрась нас красотой имана</div></div>
+            <div class="fragment"><div class="ar">وَاجْعَلْنَا هُدَاةً مُهْتَدِينَ</div><div class="trsc">уадж‘альна худатан мухтадин</div><div class="ru">и сделай нас несущими прямой путь и следующими ему!</div></div>
         </div>
     </div>
 
@@ -1487,71 +528,18 @@ window.createTextSettings = createTextSettings;
         <div class="title">16. О стойкости в деле и чистоте сердца</div>
         <div class="source">Источник: ат-Табарани «аль-Кабир» 7/335-336, «ас-Сильсиля ас-сахиха» 7-9/696</div>
         <div class="wrapper">
-            <div class="fragment">
-                <div class="ar">اللَّهُمَّ إِنِّي أَسْأَلُكَ الثَّبَاتَ</div>
-                <div class="trsc">Аллахумма инни ас-алюка ас-сабата</div>
-                <div class="ru">О Аллах, я прошу у Тебя стойкости</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">فِي الْأَمْرِ</div>
-                <div class="trsc">филь-амри</div>
-                <div class="ru">в делах</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَالْعَزِيمَةَ عَلَى الرُّشْدِ</div>
-                <div class="trsc">уаль-‘азимата ‘аля-р-рушди</div>
-                <div class="ru">и решимости на истинном пути</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَأَسْأَلُكَ مُوجِبَاتِ رَحْمَتِكَ</div>
-                <div class="trsc">уа ас-алюка муджибати рахматика</div>
-                <div class="ru">и прошу Тебя о причинах Твоей милости</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَعَزَائِمَ مَغْفِرَتِكَ</div>
-                <div class="trsc">уа ‘аза-има магфиратика</div>
-                <div class="ru">и о непременном Твоём прощении</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَأَسْأَلُكَ شُكْرَ نِعْمَتِكَ</div>
-                <div class="trsc">уа ас-алюка шукра ни‘матика</div>
-                <div class="ru">и прошу Тебя о благодарности за милость Твою</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَحُسْنَ عِبَادَتِكَ</div>
-                <div class="trsc">уа хусна ‘ибадатика</div>
-                <div class="ru">и о совершенстве поклонения Тебе</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَأَسْأَلُكَ قَلْبًا سَلِيمًا</div>
-                <div class="trsc">уа ас-алюка кальбан салиман</div>
-                <div class="ru">и прошу Тебя о здравом сердце</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَلِسَانًا صَادِقًا</div>
-                <div class="trsc">уа лисанан садикан</div>
-                <div class="ru">и о правдивом языке</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَأَسْأَلُكَ مِنْ خَيْرِ مَا تَعْلَمُ</div>
-                <div class="trsc">уа ас-алюка мин хайри ма та‘ляму</div>
-                <div class="ru">и прошу у Тебя блага, о котором Ты знаешь</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَأَعُوذُ بِكَ مِنْ شَرِّ مَا تَعْلَمُ</div>
-                <div class="trsc">уа а‘узу бика мин шарри ма та‘ляму</div>
-                <div class="ru">и прибегаю к Тебе от зла, о котором Ты знаешь</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَأَسْتَغْفِرُكَ لِمَا تَعْلَمُ</div>
-                <div class="trsc">уа астагфирука ли ма та‘ляму</div>
-                <div class="ru">и прошу простить мне то, о чём Ты знаешь</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">إِنَّكَ أَنْتَ عَلاَّمُ الْغُيُوبِ</div>
-                <div class="trsc">иннака Анта ‘аллямуль-гъуюб</div>
-                <div class="ru">поистине, Ты — Ведающий сокровенное</div>
-            </div>
+            <div class="fragment"><div class="ar">اللَّهُمَّ إِنِّي أَسْأَلُكَ الثَّبَاتَ فِي الْأَمْرِ</div><div class="trsc">Аллахумма инни ас-алюка ас-сабата филь-амри</div><div class="ru">О Аллах, я прошу у Тебя стойкости в делах</div></div>
+            <div class="fragment"><div class="ar">وَالْعَزِيمَةَ عَلَى الرُّشْدِ</div><div class="trsc">уаль-‘азимата ‘аля-р-рушди</div><div class="ru">и решимости на истинном пути!</div></div>
+            <div class="fragment"><div class="ar">وَأَسْأَلُكَ مُوجِبَاتِ رَحْمَتِكَ</div><div class="trsc">Уа ас-алюка муджибати рахматика</div><div class="ru">И прошу Тебя даровать то, что послужит причиной проявления Твоей милости</div></div>
+            <div class="fragment"><div class="ar">وَعَزَائِمَ مَغْفِرَتِكَ</div><div class="trsc">уа ‘аза-има магфиратика</div><div class="ru">и непременно позволит заслужить Твоё прощение!</div></div>
+            <div class="fragment"><div class="ar">وَأَسْأَلُكَ شُكْرَ نِعْمَتِكَ</div><div class="trsc">Уа ас-алюка шукра ни‘матика</div><div class="ru">И прошу Тебя сделать так, чтобы я благодарил Тебя за оказанную Тобой милость</div></div>
+            <div class="fragment"><div class="ar">وَحُسْنَ عِبَادَتِكَ</div><div class="trsc">уа хусна ‘ибадатика</div><div class="ru">и должным образом поклонялся Тебе!</div></div>
+            <div class="fragment"><div class="ar">وَأَسْأَلُكَ قَلْبًا سَلِيمًا</div><div class="trsc">Уа ас-алюка кальбан салиман</div><div class="ru">И прошу Тебя о здравом сердце</div></div>
+            <div class="fragment"><div class="ar">وَلِسَانًا صَادِقًا</div><div class="trsc">уа лисанан садикан</div><div class="ru">и правдивом языке!</div></div>
+            <div class="fragment"><div class="ar">وَأَسْأَلُكَ مِنْ خَيْرِ مَا تَعْلَمُ</div><div class="trsc">Уа ас-алюка мин хайри ма та‘ляму</div><div class="ru">И прошу у Тебя блага, о котором Ты знаешь</div></div>
+            <div class="fragment"><div class="ar">وَأَعُوذُ بِكَ مِنْ شَرِّ مَا تَعْلَمُ</div><div class="trsc">уа а‘узу бика мин шарри ма та‘ляму</div><div class="ru">прибегаю к Твоей защите от зла, о котором Ты знаешь</div></div>
+            <div class="fragment"><div class="ar">وَأَسْتَغْفِرُكَ لِمَا تَعْلَمُ</div><div class="trsc">уа астагфирука ли ма та‘ляму</div><div class="ru">и прошу простить мне то, о чём Ты знаешь!</div></div>
+            <div class="fragment"><div class="ar">إِنَّكَ أَنْتَ عَلاَّمُ الْغُيُوبِ</div><div class="trsc">Иннака Анта ‘аллямуль-гъуюб</div><div class="ru">Поистине, Тебе ведомо всё сокровенное!</div></div>
         </div>
     </div>
 
@@ -1560,137 +548,38 @@ window.createTextSettings = createTextSettings;
         <div class="title">17. Защита от гибели и смерти в отступлении</div>
         <div class="source">Источник: Абу Дауд 1552, ан-Насаи 5531, аль-Хаким 1/531</div>
         <div class="wrapper">
-            <div class="fragment">
-                <div class="ar">اللَّهُمَّ إِنِّي أَعُوذُ بِكَ</div>
-                <div class="trsc">Аллахумма, инни а‘узубика</div>
-                <div class="ru">О Аллах, поистине, я прибегаю к Тебе</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">مِنَ الْهَدْمِ</div>
-                <div class="trsc">миналь-хадм</div>
-                <div class="ru">от гибели под обломками</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَأَعُوذُ بِكَ مِنَ التَّرَدِّي</div>
-                <div class="trsc">уа а‘узубика мина-ттарадди</div>
-                <div class="ru">и прибегаю к Тебе от падения с высоты</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَأَعُوذُ بِكَ مِنَ الْغَرَقِ</div>
-                <div class="trsc">уа а‘узубика миналь-гъаракъи</div>
-                <div class="ru">и прибегаю к Тебе от потопления</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَالْحَرَقِ وَالْهَرَمِ</div>
-                <div class="trsc">уаль-харакъи уаль-харам</div>
-                <div class="ru">от сгорания и от старческого маразма</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَأَعُوذُ بِكَ أَنْ يَتَخَبَّطَنِيَ</div>
-                <div class="trsc">уа а‘узубика ан ятахаббатания</div>
-                <div class="ru">и прибегаю к Тебе от того, чтобы помутил меня</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">الشَّيْطَانُ عِنْدَ الْمَوْتِ</div>
-                <div class="trsc">аш-шайтану ‘индаль-маут</div>
-                <div class="ru">шайтан перед смертью</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَأَعُوذُ بِكَ أَنْ أَمُوتَ</div>
-                <div class="trsc">уа а‘узубика ан амута</div>
-                <div class="ru">и прибегаю к Тебе от того, чтобы умереть</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">فِي سَبِيلِكَ مُدْبِرًا</div>
-                <div class="trsc">фи сабилика мудбира</div>
-                <div class="ru">на Твоём пути отступающим</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَأَعُوذُ بِكَ أَنْ أَمُوتَ لَدِيغًا</div>
-                <div class="trsc">уа а‘узубика ан амута лядигъа</div>
-                <div class="ru">и прибегаю к Тебе от того, чтобы умереть ужаленным</div>
-            </div>
+            <div class="fragment"><div class="ar">اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنَ الْهَدْمِ</div><div class="trsc">Аллахумма, инни а‘узубика миналь-хадм</div><div class="ru">О Аллах, поистине, я прибегаю к Тебе за защитой от того, чтобы погибнуть под обломками здания</div></div>
+            <div class="fragment"><div class="ar">وَأَعُوذُ بِكَ مِنَ التَّرَدِّي</div><div class="trsc">уа а‘узубика мина-ттарадди</div><div class="ru">от того, чтобы упасть с высоты и разбиться</div></div>
+            <div class="fragment"><div class="ar">وَأَعُوذُ بِكَ مِنَ الْغَرَقِ</div><div class="trsc">уа а‘узубика миналь-гъаракъи</div><div class="ru">от того, чтобы утонуть</div></div>
+            <div class="fragment"><div class="ar">وَالْحَرَقِ</div><div class="trsc">уаль-харакъи</div><div class="ru">сгореть</div></div>
+            <div class="fragment"><div class="ar">وَالْهَرَمِ</div><div class="trsc">уаль-харам</div><div class="ru">и от старческого маразма</div></div>
+            <div class="fragment"><div class="ar">وَأَعُوذُ بِكَ أَنْ يَتَخَبَّطَنِيَ الشَّيْطَانُ عِنْدَ الْمَوْتِ</div><div class="trsc">уа а‘узубика ан ятахаббатания-шшайтану ‘индаль-маут</div><div class="ru">И я прибегаю к Твоей защите от того, чтобы помутил меня шайтан перед смертью</div></div>
+            <div class="fragment"><div class="ar">وَأَعُوذُ بِكَ أَنْ أَمُوتَ فِي سَبِيلِكَ مُدْبِرًا</div><div class="trsc">уа а‘узубика ан амута фи сабилика мудбира</div><div class="ru">от того, чтобы умереть отступающим на Твоём пути</div></div>
+            <div class="fragment"><div class="ar">وَأَعُوذُ بِكَ أَنْ أَمُوتَ لَدِيغًا</div><div class="trsc">уа а‘узубика ан амута лядигъа</div><div class="ru">и от того, чтобы умереть ужаленным!</div></div>
         </div>
     </div>
 
-    <!-- 18. Мольба в Ночь предопределения -->
+    <!-- 18. Мольба в Ночь предопределения (Лейлятуль-Кадр) -->
     <div class="dua-section">
-        <div class="title">18. Мольба в Ночь предопределения</div>
-        <div class="source">Источник: Ибн Маджах 3850, «Сахих аль-джами'» 4423</div>
+        <div class="title">18. Мольба в Ночь предопределения (Лейлятуль-Кадр)</div>
+        <div class="source">Источник: Ибн Маджах 3850, «Сахих аль-джами‘» 4423</div>
         <div class="wrapper">
-            <div class="fragment">
-                <div class="ar">اللَّهُمَّ إِنَّكَ عَفُوٌّ</div>
-                <div class="trsc">Аллахумма иннака ‘Афуун</div>
-                <div class="ru">О Аллах, поистине, Ты — Прощающий</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">تُحِبُّ الْعَفْوَ</div>
-                <div class="trsc">тухиббуль-‘афуа</div>
-                <div class="ru">Ты любишь прощать</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">فَاعْفُ عَنِّي</div>
-                <div class="trsc">фа‘фу ‘анни</div>
-                <div class="ru">так прости же меня</div>
-            </div>
+            <div class="fragment"><div class="ar">اللَّهُمَّ إِنَّكَ عَفُوٌّ</div><div class="trsc">Аллахумма иннака ‘Афуун</div><div class="ru">О Аллах, поистине, Ты — Прощающий</div></div>
+            <div class="fragment"><div class="ar">تُحِبُّ الْعَفْوَ</div><div class="trsc">тухиббуль-‘афуа</div><div class="ru">Ты любишь прощать</div></div>
+            <div class="fragment"><div class="ar">فَاعْفُ عَنِّي</div><div class="trsc">фа‘фу ‘анни</div><div class="ru">так прости же меня!</div></div>
         </div>
     </div>
 
     <!-- 19. Исправление религии, мирской и вечной жизни -->
     <div class="dua-section">
         <div class="title">19. Исправление религии, мирской и вечной жизни</div>
-        <div class="source">Источник: Муслим 2720, «Сахих аль-джами'» 1263</div>
+        <div class="source">Источник: Муслим 2720, «Сахих аль-джами‘» 1263</div>
         <div class="wrapper">
-            <div class="fragment">
-                <div class="ar">اللَّهُمَّ أَصْلِحْ لِي دِينِي</div>
-                <div class="trsc">Аллахумма, аслих ли дини</div>
-                <div class="ru">О Аллах, приведи в порядок мою религию</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">الَّذِي هُوَ عِصْمَةُ أَمْرِي</div>
-                <div class="trsc">аллязи хууа ‘исмату амри</div>
-                <div class="ru">которая служит защитой моих дел</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَأَصْلِحْ لِي دُنْيَايَ</div>
-                <div class="trsc">уа аслих ли дунйайа</div>
-                <div class="ru">и приведи в порядок мир этот</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">الَّتِي فِيهَا مَعَاشِي</div>
-                <div class="trsc">алляти фиха ма‘аши</div>
-                <div class="ru">в котором я живу</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَأَصْلِحْ لِي آخِرَتِي</div>
-                <div class="trsc">уа аслих ли ахирати</div>
-                <div class="ru">и приведи в порядок мир вечный</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">الَّتِي فِيهَا مَعَادِي</div>
-                <div class="trsc">алляти фиха ма‘ади</div>
-                <div class="ru">куда я вернусь</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَاجْعَلِ الْحَيَاةَ زِيَادَةً لِي</div>
-                <div class="trsc">уа-дж‘али-ль-хайата зийадатан ли</div>
-                <div class="ru">и сделай жизнь прибавлением для меня</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">فِي كُلِّ خَيْرٍ</div>
-                <div class="trsc">фи кулли хайрин</div>
-                <div class="ru">во всяком благе</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَاجْعَلِ الْمَوْتَ رَاحَةً لِي</div>
-                <div class="trsc">уа-дж‘али-ль-маута рахатан ли</div>
-                <div class="ru">и сделай смерть отдохновением для меня</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">مِنْ كُلِّ شَرٍّ</div>
-                <div class="trsc">мин кулли шаррин</div>
-                <div class="ru">от всякого зла</div>
-            </div>
+            <div class="fragment"><div class="ar">اللَّهُمَّ أَصْلِحْ لِي دِينِي الَّذِي هُوَ عِصْمَةُ أَمْرِي</div><div class="trsc">Аллахумма, аслих ли дини аллязи хууа ‘исмату амри</div><div class="ru">О Аллах, приведи для меня в порядок мою религию, которая служит мне защитой во всех моих делах</div></div>
+            <div class="fragment"><div class="ar">وَأَصْلِحْ لِي دُنْيَايَ الَّتِي فِيهَا مَعَاشِي</div><div class="trsc">уа аслих ли дунйайа алляти фиха ма‘аши</div><div class="ru">и приведи для меня в порядок мир этот, в котором я живу</div></div>
+            <div class="fragment"><div class="ar">وَأَصْلِحْ لِي آخِرَتِي الَّتِي فِيهَا مَعَادِي</div><div class="trsc">уа аслих ли ахирати алляти фиха ма‘ади</div><div class="ru">и приведи для меня в порядок мир вечный, куда я вернусь</div></div>
+            <div class="fragment"><div class="ar">وَاجْعَلِ الْحَيَاةَ زِيَادَةً لِي فِي كُلِّ خَيْرٍ</div><div class="trsc">уа-дж‘али-ль-хайата зийадатан ли фи кулли хайрин</div><div class="ru">и сделай так, чтобы жизнь только добавляла мне всякого блага</div></div>
+            <div class="fragment"><div class="ar">وَاجْعَلِ الْمَوْتَ رَاحَةً لِي مِنْ كُلِّ شَرٍّ</div><div class="trsc">уа-дж‘али-ль-маута рахатан ли мин кулли шаррин</div><div class="ru">и сделай для меня смерть отдохновением от всякого зла!</div></div>
         </div>
     </div>
 
@@ -1699,230 +588,347 @@ window.createTextSettings = createTextSettings;
         <div class="title">20. Прощение всех грехов — явных и скрытых</div>
         <div class="source">Источник: аль-Бухари 6399, Муслим 2719</div>
         <div class="wrapper">
-            <div class="fragment">
-                <div class="ar">اللَّهُمَّ اغْفِرْ لِي خَطِيئَتِي</div>
-                <div class="trsc">Аллахумма-гъфирли хаты-ати</div>
-                <div class="ru">О Аллах, прости мне мой грех</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَجَهْلِي وَإِسْرَافِي فِي أَمْرِي</div>
-                <div class="trsc">уа джахли, уа ис-рафи фи амри</div>
-                <div class="ru">и моё невежество, и неумеренность в моих делах</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَمَا أَنْتَ أَعْلَمُ بِهِ مِنِّي</div>
-                <div class="trsc">уа ма Анта а‘ляму бихи минни</div>
-                <div class="ru">и то, о чём Ты знаешь лучше меня</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">اللَّهُمَّ اغْفِرْ لِي جِدِّي</div>
-                <div class="trsc">Аллахумма-гъфирли джидди</div>
-                <div class="ru">О Аллах, прости мне мою серьёзность</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَهَزْلِي وَخَطَئِي</div>
-                <div class="trsc">уа хазли, уа хата-и</div>
-                <div class="ru">и мою шутливость, и мою ошибку</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَعَمْدِي</div>
-                <div class="trsc">уа ‘амди</div>
-                <div class="ru">и мой умысел</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَكُلُّ ذَلِكَ عِنْدِي</div>
-                <div class="trsc">уа куллю залика ‘инди</div>
-                <div class="ru">и всё это у меня (мне присуще)</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">اللَّهُمَّ اغْفِرْ لِي مَا قَدَّمْتُ</div>
-                <div class="trsc">Аллахумма-гъфирли ма каддамту</div>
-                <div class="ru">О Аллах, прости мне то, что я совершил прежде</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَمَا أَخَّرْتُ</div>
-                <div class="trsc">уа ма аххарту</div>
-                <div class="ru">и что отложил (ещё не совершил)</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَمَا أَسْرَرْتُ وَمَا أَعْلَنْتُ</div>
-                <div class="trsc">уа ма асрарту уа ма а‘лянту</div>
-                <div class="ru">что совершил тайно и что явно</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَمَا أَنْتَ أَعْلَمُ بِهِ مِنِّي</div>
-                <div class="trsc">уа ма Анта а‘ляму бихи минни</div>
-                <div class="ru">и то, о чём Ты знаешь лучше меня</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">أَنْتَ الْمُقَدِّمُ</div>
-                <div class="trsc">Анта-ль-Мукаддиму</div>
-                <div class="ru">Ты — Выдвигающий вперёд</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَأَنْتَ الْمُؤَخِّرُ</div>
-                <div class="trsc">уа Анта-ль-Му-аххыру</div>
-                <div class="ru">и Ты — Отодвигающий</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَأَنْتَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ</div>
-                <div class="trsc">уа Анта ‘аля кулли шай-ин кадир</div>
-                <div class="ru">и Ты надо всем властен</div>
-            </div>
+            <div class="fragment"><div class="ar">اللَّهُمَّ اغْفِرْ لِي خَطِيئَتِي</div><div class="trsc">Аллахумма-гъфирли хаты-ати</div><div class="ru">О Аллах, прости мне мой грех</div></div>
+            <div class="fragment"><div class="ar">وَجَهْلِي</div><div class="trsc">уа джахли</div><div class="ru">и моё невежество</div></div>
+            <div class="fragment"><div class="ar">وَإِسْرَافِي فِي أَمْرِي</div><div class="trsc">уа ис-рафи фи амри</div><div class="ru">неумеренность в моих делах</div></div>
+            <div class="fragment"><div class="ar">وَمَا أَنْتَ أَعْلَمُ بِهِ مِنِّي</div><div class="trsc">уа ма Анта а‘ляму бихи минни</div><div class="ru">и то, о чём Ты знаешь лучше меня!</div></div>
+            <div class="fragment"><div class="ar">اللَّهُمَّ اغْفِرْ لِي جِدِّي</div><div class="trsc">Аллахумма-гъфирли джидди</div><div class="ru">О Аллах, прости мне сделанное мной всерьёз</div></div>
+            <div class="fragment"><div class="ar">وَهَزْلِي</div><div class="trsc">уа хазли</div><div class="ru">и в шутку</div></div>
+            <div class="fragment"><div class="ar">وَخَطَئِي</div><div class="trsc">уа хата-и</div><div class="ru">по ошибке</div></div>
+            <div class="fragment"><div class="ar">وَعَمْدِي</div><div class="trsc">уа ‘амди</div><div class="ru">и намеренно</div></div>
+            <div class="fragment"><div class="ar">وَكُلُّ ذَلِكَ عِنْدِي</div><div class="trsc">уа куллю залика ‘инди</div><div class="ru">ибо всё это мне присуще!</div></div>
+            <div class="fragment"><div class="ar">اللَّهُمَّ اغْفِرْ لِي مَا قَدَّمْتُ</div><div class="trsc">Аллахумма-гъфирли ма каддамту</div><div class="ru">О Аллах, прости мне совершённое мной прежде</div></div>
+            <div class="fragment"><div class="ar">وَمَا أَخَّرْتُ</div><div class="trsc">уа ма аххарту</div><div class="ru">и то, что ещё не совершено</div></div>
+            <div class="fragment"><div class="ar">وَمَا أَسْرَرْتُ</div><div class="trsc">уа ма асрарту</div><div class="ru">то, что я совершил тайно</div></div>
+            <div class="fragment"><div class="ar">وَمَا أَعْلَنْتُ</div><div class="trsc">уа ма а‘лянту</div><div class="ru">и что совершил явно</div></div>
+            <div class="fragment"><div class="ar">وَمَا أَنْتَ أَعْلَمُ بِهِ مِنِّي</div><div class="trsc">уа ма Анта а‘ляму бихи минни</div><div class="ru">и то, о чём Ты знаешь лучше меня!</div></div>
+            <div class="fragment"><div class="ar">أَنْتَ الْمُقَدِّمُ</div><div class="trsc">Анта-ль-Мукаддиму</div><div class="ru">Ты — Выдвигающий вперёд</div></div>
+            <div class="fragment"><div class="ar">وَأَنْتَ الْمُؤَخِّرُ</div><div class="trsc">уа Анта-ль-Му-аххыру</div><div class="ru">и Ты — Отодвигающий</div></div>
+            <div class="fragment"><div class="ar">وَأَنْتَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ</div><div class="trsc">уа Анта ‘аля кулли шай-ин кадир</div><div class="ru">и Ты надо всем властен!</div></div>
         </div>
     </div>
 
     <!-- 21. Защита от зла органов чувств -->
     <div class="dua-section">
         <div class="title">21. Защита от зла органов чувств</div>
-        <div class="source">Источник: Абу Дауд 1551, ат-Тирмизи 3492, «Сахих аль-джами'» 1292</div>
+        <div class="source">Источник: Абу Дауд 1551, ат-Тирмизи 3492, «Сахих аль-джами‘» 1292</div>
         <div class="wrapper">
-            <div class="fragment">
-                <div class="ar">اللَّهُمَّ إِنِّي أَعُوذُ بِكَ</div>
-                <div class="trsc">Аллахумма, инни а‘узубика</div>
-                <div class="ru">О Аллах, поистине, я прибегаю к Тебе</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">مِنْ شَرِّ سَمْعِي</div>
-                <div class="trsc">мин шарри сам‘и</div>
-                <div class="ru">от зла моего слуха</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَمِنْ شَرِّ بَصَرِي</div>
-                <div class="trsc">уа мин шарри басари</div>
-                <div class="ru">и от зла моего зрения</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَمِنْ شَرِّ لِسَانِي</div>
-                <div class="trsc">уа мин шарри лисани</div>
-                <div class="ru">и от зла моего языка</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَمِنْ شَرِّ قَلْبِي</div>
-                <div class="trsc">уа мин шарри кальби</div>
-                <div class="ru">и от зла моего сердца</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَمِنْ شَرِّ مَنِيِّي</div>
-                <div class="trsc">уа мин шарри манийи</div>
-                <div class="ru">и от зла моих половых органов</div>
-            </div>
+            <div class="fragment"><div class="ar">اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنْ شَرِّ سَمْعِي</div><div class="trsc">Аллахумма, инни а‘узубика мин шарри сам‘и</div><div class="ru">О Аллах, поистине, я прибегаю к Твоей защите от зла моего слуха</div></div>
+            <div class="fragment"><div class="ar">وَمِنْ شَرِّ بَصَرِي</div><div class="trsc">уа мин шарри басари</div><div class="ru">и от зла моего зрения</div></div>
+            <div class="fragment"><div class="ar">وَمِنْ شَرِّ لِسَانِي</div><div class="trsc">уа мин шарри лисани</div><div class="ru">и от зла моего языка</div></div>
+            <div class="fragment"><div class="ar">وَمِنْ شَرِّ قَلْبِي</div><div class="trsc">уа мин шарри кальби</div><div class="ru">и от зла моего сердца</div></div>
+            <div class="fragment"><div class="ar">وَمِنْ شَرِّ مَنِيِّي</div><div class="trsc">уа мин шарри манийи</div><div class="ru">и от зла моих половых органов!</div></div>
         </div>
     </div>
 
     <!-- 22. Защита посредством Ислама и от зависти врага -->
     <div class="dua-section">
         <div class="title">22. Защита посредством Ислама и от зависти врага</div>
-        <div class="source">Источник: аль-Хаким 1/525, «Сахих аль-джами'» 1260, «ас-Сильсиля ас-сахиха» 1540</div>
+        <div class="source">Источник: аль-Хаким 1/525, «Сахих аль-джами‘» 1260, «ас-Сильсиля ас-сахиха» 1540</div>
         <div class="wrapper">
-            <div class="fragment">
-                <div class="ar">اللَّهُمَّ احْفَظْنِي بِالإِسْلاَمِ</div>
-                <div class="trsc">Аллахумма-хфазни биль-Ислями</div>
-                <div class="ru">О Аллах, храни меня посредством Ислама</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">قَائِمًا</div>
-                <div class="trsc">каиман</div>
-                <div class="ru">когда я стою</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَاحْفَظْنِي بِالإِسْلاَمِ قَاعِدًا</div>
-                <div class="trsc">уа-хфазни биль-Ислями ка‘идан</div>
-                <div class="ru">и храни меня посредством Ислама, когда я сижу</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَاحْفَظْنِي بِالإِسْلاَمِ رَاقِدًا</div>
-                <div class="trsc">уа-хфазни биль-Ислями ракидан</div>
-                <div class="ru">и храни меня посредством Ислама, когда я сплю</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَلاَ تُشْمِتْ بِي عَدُوًّا</div>
-                <div class="trsc">уа ля тушмит би ‘адувван</div>
-                <div class="ru">и не давай злорадствовать надо мной врагу</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَلاَ حَاسِدًا</div>
-                <div class="trsc">уа ля хасидан</div>
-                <div class="ru">и не давай завистнику</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">اللَّهُمَّ إِنِّي أَسْأَلُكَ</div>
-                <div class="trsc">Аллахумма инни ас-алюка</div>
-                <div class="ru">О Аллах, поистине, я прошу Тебя</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">مِنْ كُلِّ خَيْرٍ خَزَائِنُهُ بِيَدِكَ</div>
-                <div class="trsc">мин кулли хайрин хазаинуху би-ядик</div>
-                <div class="ru">о всяком благе, сокровища которого в Твоей руке</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">وَأَعُوذُ بِكَ</div>
-                <div class="trsc">уа а‘узу бика</div>
-                <div class="ru">и прибегаю к Тебе</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">مِنْ كُلِّ شَرٍّ خَزَائِنُهُ بِيَدِكَ</div>
-                <div class="trsc">мин кулли шаррин хазаинуху би-ядик</div>
-                <div class="ru">от каждого зла, сокровища которого в Твоей руке</div>
-            </div>
+            <div class="fragment"><div class="ar">اللَّهُمَّ احْفَظْنِي بِالإِسْلاَمِ قَائِمًا</div><div class="trsc">Аллахумма-хфазни биль-Ислями каиман</div><div class="ru">О Аллах, храни меня посредством Ислама, когда я буду стоять</div></div>
+            <div class="fragment"><div class="ar">وَاحْفَظْنِي بِالإِسْلاَمِ قَاعِدًا</div><div class="trsc">уа-хфазни биль-Ислями ка‘идан</div><div class="ru">и храни меня посредством Ислама, когда я буду сидеть</div></div>
+            <div class="fragment"><div class="ar">وَاحْفَظْنِي بِالإِسْلاَمِ رَاقِدًا</div><div class="trsc">уа-хфазни биль-Ислями ракидан</div><div class="ru">и храни меня посредством Ислама, когда я буду спать</div></div>
+            <div class="fragment"><div class="ar">وَلاَ تُشْمِتْ بِي عَدُوًّا</div><div class="trsc">уа ля тушмит би ‘адувван</div><div class="ru">и не позволяй злорадствовать надо мной врагу</div></div>
+            <div class="fragment"><div class="ar">وَلاَ حَاسِدًا</div><div class="trsc">уа ля хасидан</div><div class="ru">ни завистнику</div></div>
+            <div class="fragment"><div class="ar">اللَّهُمَّ إِنِّي أَسْأَلُكَ مِنْ كُلِّ خَيْرٍ خَزَائِنُهُ بِيَدِكَ</div><div class="trsc">Аллахумма инни ас‘алюка мин кулли хайрин хазаинуху би-ядик</div><div class="ru">О Аллах, поистине, я прошу Тебя о всяком благе, сокровища которого в Твоей руке</div></div>
+            <div class="fragment"><div class="ar">وَأَعُوذُ بِكَ مِنْ كُلِّ شَرٍّ خَزَائِنُهُ بِيَدِكَ</div><div class="trsc">уа а‘узу бика мин кулли шаррин хазаинуху би-ядик</div><div class="ru">и прибегаю к Твоей защите от каждого зла, сокровища которого в Твоей руке!</div></div>
         </div>
     </div>
 
-    <!-- 23. Вера неиссякаемая и соседство с Пророком -->
+    <!-- 23. Вера неиссякаемая и соседство с Пророком ﷺ -->
     <div class="dua-section">
-        <div class="title">23. Вера неиссякаемая и соседство с Пророком</div>
+        <div class="title">23. Вера неиссякаемая и соседство с Пророком ﷺ</div>
         <div class="source">Источник: аль-Хаким 1928, Ахмад, «ат-Тальхыс» 1/707</div>
         <div class="wrapper">
-            <div class="fragment">
-                <div class="ar">اللَّهُمَّ إِنِّي أَسْأَلُكَ</div>
-                <div class="trsc">Аллахумма инни ас-алюка</div>
-                <div class="ru">О Аллах, поистине, я прошу Тебя</div>
+            <div class="fragment"><div class="ar">اللَّهُمَّ إِنِّي أَسْأَلُكَ إِيمَانًا لاَ يَرْتَدُّ</div><div class="trsc">Аллахумма инни ас-алюка имана ля йартад</div><div class="ru">О Аллах, поистине, я прошу у Тебя веры, которая не отступает</div></div>
+            <div class="fragment"><div class="ar">وَنَعِيمًا لاَ يَنْفَدُ</div><div class="trsc">уа на‘има ля йанфад</div><div class="ru">и блаженства, которое не иссякает</div></div>
+            <div class="fragment"><div class="ar">وَمُرَافَقَةَ نَبِيِّكَ مُحَمَّدٍ صَلَّى اللهُ عَلَيْهِ وَسَلَّمَ</div><div class="trsc">уа мурафаката набийика Мухаммадин, салля-Ллаху ‘аляйхи уа салляма</div><div class="ru">и чтобы я был спутником Твоего Пророка Мухаммада ﷺ</div></div>
+            <div class="fragment"><div class="ar">فِي أَعْلَى دَرَجِ الْجَنَّةِ</div><div class="trsc">фи а‘ля дараджиль-джаннати</div><div class="ru">на высшей ступени Рая</div></div>
+            <div class="fragment"><div class="ar">جَنَّةِ الْخُلْدِ</div><div class="trsc">джаннатиль-хульд</div><div class="ru">в Саду Вечности!</div></div>
+        </div>
+    </div>
+
+    <!-- Модальное окно настроек -->
+    <div class="modal-overlay" id="settingsModal">
+        <div class="settings-modal">
+            <h3>Настройки текста</h3>
+            
+            <div class="setting-item">
+                <label>Арабский текст <span class="value-display" id="arSizeValue">33px</span></label>
+                <input type="range" id="arSize" min="16" max="60" value="33" step="1">
             </div>
-            <div class="fragment">
-                <div class="ar">إِيمَانًا لاَ يَرْتَدُّ</div>
-                <div class="trsc">иманан ля йартадду</div>
-                <div class="ru">о вере, которая не отступает</div>
+            
+            <div class="setting-item">
+                <label>Транскрипция <span class="value-display" id="trscSizeValue">0.4em</span></label>
+                <input type="range" id="trscSize" min="0.2" max="1" value="0.4" step="0.05">
             </div>
-            <div class="fragment">
-                <div class="ar">وَنَعِيمًا لاَ يَنْفَدُ</div>
-                <div class="trsc">уа на‘иман ля йанфад</div>
-                <div class="ru">и о блаженстве, которое не иссякает</div>
+            
+            <div class="setting-item">
+                <label>Перевод <span class="value-display" id="ruSizeValue">0.4em</span></label>
+                <input type="range" id="ruSize" min="0.2" max="1" value="0.4" step="0.05">
             </div>
-            <div class="fragment">
-                <div class="ar">وَمُرَافَقَةَ نَبِيِّكَ مُحَمَّدٍ</div>
-                <div class="trsc">уа мурафаката набийика Мухаммадин</div>
-                <div class="ru">и о спутничестве Твоего Пророка Мухаммада</div>
+            
+            <div class="setting-item">
+                <label>Отображение элементов:</label>
+                <div class="checkbox-group">
+                    <label>
+                        <input type="checkbox" id="showAr" checked> Арабский
+                    </label>
+                    <label>
+                        <input type="checkbox" id="showTrsc" checked> Транскрипция
+                    </label>
+                    <label>
+                        <input type="checkbox" id="showRu" checked> Перевод
+                    </label>
+                </div>
             </div>
-            <div class="fragment">
-                <div class="ar">صَلَّى اللهُ عَلَيْهِ وَسَلَّمَ</div>
-                <div class="trsc">салля-Ллаху ‘аляйхи уа салляма</div>
-                <div class="ru">да благословит его Аллах и приветствует</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">فِي أَعْلَى دَرَجِ الْجَنَّةِ</div>
-                <div class="trsc">фи а‘ля дараджиль-джаннати</div>
-                <div class="ru">на высшей ступени Рая</div>
-            </div>
-            <div class="fragment">
-                <div class="ar">جَنَّةِ الْخُلْدِ</div>
-                <div class="trsc">джаннатиль-хульд</div>
-                <div class="ru">в Саду Вечности</div>
+            
+            <button class="close-btn" id="closeSettings">Готово</button>
+        </div>
+    </div>
+
+   
+<div class="nav">
+<div class="bottom-nav">
+         
+<a href="/dua_quran.html" style="text-decoration: none;">        <div class="nav-item quran">
+            <span class="icon">
+<svg version="1.0" xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 512.000000 512.000000"
+ preserveAspectRatio="xMidYMid meet">
+
+<g transform="translate(0.000000,512.000000) scale(0.100000,-0.100000)"
+ stroke="none">
+<path d="M993 5106 c-127 -31 -264 -137 -325 -252 -62 -115 -58 23 -58 -2189
+0 -1719 2 -2028 15 -2074 37 -142 136 -262 266 -324 89 -43 167 -57 334 -57
+l121 0 11 -42 c18 -67 52 -110 112 -140 68 -35 99 -35 222 -2 l98 27 105 -27
+c117 -29 135 -30 189 -15 71 19 146 110 147 176 l0 23 1096 2 1096 3 25 29
+c20 24 24 36 19 65 -11 71 83 65 -1134 71 l-1097 5 -3 122 -3 123 1011 0 1012
+0 29 29 29 29 0 181 0 180 48 21 c62 28 99 64 128 125 l24 50 0 1831 c0 2038
+5 1885 -69 1962 -20 21 -55 47 -76 57 -39 20 -71 20 -1333 23 l-1293 2 -30
+-29 c-38 -38 -38 -74 0 -112 l29 -29 1267 0 c1307 0 1292 0 1322 -39 10 -12
+12 -419 13 -1827 0 -1769 0 -1812 -19 -1835 l-19 -24 -1639 -5 -1638 -5 -67
+-23 c-36 -12 -90 -38 -118 -57 -29 -19 -54 -35 -56 -35 -2 0 -3 811 -2 1803
+l3 1802 22 47 c46 100 148 177 256 193 l47 7 0 -1654 c0 -1648 0 -1654 20
+-1676 41 -44 116 -36 139 14 8 18 11 483 11 1725 l0 1701 -29 29 c-28 28 -33
+29 -118 28 -48 0 -111 -6 -140 -13z m3145 -4183 l3 -123 -1426 0 -1427 0 -29
+-29 c-38 -38 -38 -74 0 -112 l29 -29 386 0 386 0 0 -219 c0 -184 -2 -221 -15
+-231 -13 -11 -37 -7 -136 19 l-120 32 -109 -31 c-60 -16 -114 -30 -119 -30
+-26 0 -41 34 -41 95 0 47 -5 69 -19 86 -19 24 -23 24 -238 30 -256 7 -300 18
+-381 97 -74 72 -97 128 -97 237 0 84 2 94 34 153 51 94 134 154 238 172 27 4
+730 7 1563 6 l1515 -1 3 -122z"/>
+<path d="M2745 4675 c-21 -20 -25 -34 -25 -80 0 -43 -3 -55 -16 -55 -31 0
+-129 -56 -175 -101 -26 -25 -59 -69 -73 -96 -32 -64 -65 -90 -124 -99 -163
+-23 -297 -131 -338 -270 -14 -48 -18 -52 -52 -59 -96 -18 -202 -95 -255 -186
+-55 -93 -57 -120 -57 -660 0 -294 4 -518 10 -550 28 -146 147 -273 293 -310
+42 -10 47 -15 61 -56 50 -145 176 -253 316 -270 66 -8 106 -35 143 -98 42 -72
+113 -141 181 -175 33 -17 65 -30 73 -30 9 0 13 -14 13 -46 0 -73 30 -113 86
+-114 21 0 40 9 58 26 22 22 26 36 26 80 0 39 4 54 13 54 30 0 136 63 177 104
+24 24 58 68 75 98 39 66 78 93 145 101 139 17 270 127 315 265 16 47 19 51 63
+62 114 28 230 129 274 237 23 58 23 60 26 574 2 338 -1 525 -8 543 -13 35 -69
+60 -104 47 -57 -22 -56 -12 -56 -544 0 -323 -4 -503 -11 -532 -14 -55 -70
+-122 -123 -146 -23 -10 -63 -19 -89 -19 -54 0 -103 -21 -110 -47 -3 -10 -8
+-40 -12 -68 -16 -119 -91 -191 -220 -210 -97 -14 -186 -80 -234 -172 -90 -175
+-309 -178 -408 -4 -59 104 -141 162 -254 180 -110 18 -178 83 -199 189 -6 31
+-13 67 -16 79 -6 30 -53 53 -109 53 -84 0 -155 45 -198 125 -22 39 -22 49 -25
+544 -3 560 -1 577 60 640 45 46 93 67 166 74 84 7 107 28 117 105 15 123 89
+199 210 217 109 15 182 68 246 176 52 90 114 129 204 129 90 0 152 -39 204
+-129 64 -108 137 -161 246 -176 120 -18 195 -95 211 -216 8 -67 34 -99 81 -99
+76 0 101 44 84 144 -32 181 -142 297 -317 333 -98 20 -118 33 -157 102 -17 31
+-52 77 -77 102 -43 43 -141 99 -174 99 -13 0 -16 12 -16 55 0 46 -4 60 -25 80
+-33 34 -87 34 -120 0z"/>
+<path d="M2759 3847 c-46 -35 -50 -88 -10 -128 25 -24 38 -29 79 -29 69 0 192
+-34 265 -72 97 -51 206 -166 255 -269 51 -105 66 -182 60 -301 -8 -151 -62
+-276 -166 -385 -158 -165 -402 -227 -618 -159 -253 81 -423 314 -424 581 0
+147 58 298 155 403 59 64 71 94 56 135 -14 35 -70 61 -104 48 -44 -17 -143
+-138 -191 -234 -69 -136 -89 -232 -83 -381 5 -136 22 -209 72 -311 100 -205
+288 -358 510 -416 103 -27 260 -29 365 -4 264 61 476 256 566 520 21 64 28
+105 32 201 6 156 -12 243 -80 383 -44 92 -61 115 -141 195 -95 94 -163 141
+-267 183 -114 45 -295 68 -331 40z"/>
+</g>
+</svg></span>
+            <span class="label">из Корана</span>
+        </div>
+</a>        
+        <!-- hadis-->
+ <a href="/dua.html" style="text-decoration: none;">       <div class="nav-item hadis active">
+            <span class="icon">
+<svg version="1.0" xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 512.000000 512.000000"
+ preserveAspectRatio="xMidYMid meet">
+
+<g transform="translate(0.000000,512.000000) scale(0.100000,-0.100000)"
+  stroke="none">
+<path d="M1845 4360 c-891 -124 -1424 -203 -1449 -214 -52 -22 -121 -79 -153
+-127 -56 -85 -76 -162 -80 -319 -7 -224 34 -387 129 -511 l36 -46 -107 -33
+c-58 -18 -114 -39 -123 -48 -44 -38 3 -100 102 -136 124 -45 186 -208 172
+-457 l-4 -75 -102 -33 c-231 -76 -324 -142 -229 -165 15 -4 45 -12 66 -17 l38
+-10 -29 -37 c-66 -83 -100 -183 -109 -318 -10 -156 24 -349 82 -464 29 -58 98
+-136 139 -157 17 -9 456 -155 975 -324 l944 -308 1399 339 c769 187 1403 342
+1408 345 18 11 10 33 -20 58 -31 27 -137 71 -256 107 l-71 21 -7 46 c-18 135
+3 296 50 383 31 58 69 89 137 115 63 24 97 56 97 93 0 35 -11 45 -65 61 -22 7
+-46 14 -52 16 -7 3 7 25 35 53 103 106 151 246 159 469 8 193 -14 290 -87 399
+l-20 32 131 32 c133 33 153 46 128 77 -20 24 -137 76 -256 113 l-101 32 -4 72
+c-5 117 8 246 32 310 28 73 88 136 150 156 88 29 135 95 93 132 -16 14 -1741
+540 -1761 537 -4 -1 -641 -90 -1417 -199z m-442 -697 c502 -163 914 -298 916
+-300 6 -4 -14 -601 -20 -607 -3 -4 -421 110 -928 252 -704 198 -927 264 -945
+281 -13 12 -35 44 -50 70 -73 135 -76 443 -4 543 21 31 68 57 101 58 10 0 429
+-134 930 -297z m3293 128 c-35 -68 -48 -160 -44 -326 l3 -159 -1123 -279
+c-618 -153 -1125 -277 -1126 -276 -3 4 15 602 18 606 3 3 2281 470 2284 467 2
+-1 -4 -16 -12 -33z m-2 -805 c71 -29 106 -127 106 -292 0 -167 -39 -302 -106
+-365 -17 -16 -250 -85 -945 -280 -508 -142 -925 -256 -928 -253 -6 6 -26 603
+-20 608 12 9 1818 594 1837 595 12 1 38 -5 56 -13z m-3124 -356 c618 -127
+1125 -232 1126 -233 3 -4 21 -602 18 -606 -1 -2 -508 123 -1125 276 l-1122
+280 -1 189 c-1 194 -3 207 -51 318 -7 15 -5 17 11 12 10 -3 525 -109 1144
+-236z m-322 -886 c499 -163 910 -299 914 -302 5 -6 -10 -603 -16 -610 -2 -1
+-419 114 -926 257 l-924 259 -37 39 c-49 53 -78 136 -91 264 -20 187 15 329
+92 370 19 11 45 19 58 19 13 0 431 -133 930 -296z m3275 80 c-26 -75 -28 -88
+-28 -258 l0 -179 -1119 -279 c-616 -153 -1121 -276 -1124 -273 -6 6 13 593 20
+600 3 3 112 28 242 54 188 39 243 48 269 40 29 -8 55 -2 158 32 87 28 347 86
+864 193 407 84 741 152 743 151 1 -1 -10 -38 -25 -81z"/>
+</g>
+</svg>
+</span>
+            <span class="label">из хадисов</span>
+        </div>
+</a>
+            <div class="nav-item setting" id="settingsButton">
+                <span class="icon">
+                    <svg version="1.0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512.000000 512.000000" preserveAspectRatio="xMidYMid meet">
+                        <g transform="translate(0.000000,512.000000) scale(0.100000,-0.100000)" stroke="none">
+                            <path d="M2047 5109 c-124 -30 -241 -134 -282 -250 -9 -23 -28 -119 -44 -214 -39 -230 -74 -296 -189 -352 -46 -22 -69 -27 -127 -27 -61 1 -90 9 -235 65 -164 63 -165 63 -270 64 -97 0 -110 -2 -170 -31 -36 -17 -85 -51 -110 -77 -53 -54 -493 -807 -523 -897 -26 -76 -19 -197 15 -272 37 -78 73 -118 215 -234 70 -58 138 -119 151 -134 86 -109 88 -268 3 -376 -11 -14 -80 -75 -153 -136 -145 -119 -177 -155 -215 -236 -35 -75 -42 -196 -17 -272 11 -30 122 -234 249 -453 250 -434 275 -468 385 -521 60 -29 73 -31 170 -31 105 1 106 1 270 64 145 56 174 64 235 65 117 1 211 -58 266 -166 13 -25 32 -108 50 -213 32 -193 45 -236 88 -299 42 -61 95 -104 171 -140 l65 -31 484 -3 c306 -2 502 1 533 7 121 26 218 102 273 214 28 59 40 104 64 248 32 196 54 254 117 309 60 52 118 74 199 73 62 0 90 -8 235 -64 164 -63 165 -63 270 -64 97 0 110 2 170 31 109 53 135 88 383 516 124 216 234 411 244 433 13 29 17 67 18 140 0 87 -3 107 -26 155 -39 81 -72 118 -220 240 -143 119 -180 164 -204 243 -19 63 -19 91 0 154 24 80 63 127 204 243 146 120 181 159 220 240 23 48 26 68 26 155 -1 73 -5 111 -18 140 -10 22 -120 217 -244 433 -248 428 -274 463 -383 516 -60 29 -73 31 -170 31 -105 -1 -106 -1 -270 -64 -145 -56 -174 -64 -235 -65 -117 -1 -211 58 -266 166 -12 24 -32 108 -50 211 -15 94 -36 192 -46 219 -34 96 -129 191 -230 233 -45 19 -76 20 -543 22 -272 1 -512 -3 -533 -8z m933 -391 c0 -2 13 -80 30 -175 43 -248 92 -356 219 -479 141 -138 346 -214 531 -199 97 8 124 15 308 82 84 31 154 54 155 52 2 -2 97 -166 211 -363 165 -287 204 -362 194 -371 -7 -6 -64 -53 -125 -104 -144 -118 -202 -184 -252 -285 -56 -111 -74 -189 -74 -316 0 -127 18 -205 74 -316 50 -101 108 -167 252 -285 61 -51 118 -98 125 -104 10 -9 -30 -85 -194 -371 -114 -197 -209 -361 -211 -363 -1 -2 -71 21 -155 52 -184 67 -211 74 -308 82 -185 15 -391 -62 -532 -198 -125 -123 -176 -233 -218 -480 -17 -95 -30 -173 -30 -174 0 -2 -189 -3 -420 -3 -231 0 -420 1 -420 3 0 1 -13 79 -30 174 -42 247 -91 353 -217 478 -140 138 -347 215 -533 200 -97 -8 -124 -15 -308 -82 -84 -31 -154 -54 -155 -52 -31 39 -415 724 -410 729 4 4 62 52 128 107 140 116 193 173 243 263 60 107 84 206 84 340 0 134 -24 233 -84 340 -50 90 -103 147 -243 263 -66 55 -124 103 -128 107 -5 5 379 690 410 729 1 2 71 -21 155 -52 207 -76 227 -80 348 -81 125 0 202 18 315 74 91 45 160 98 227 177 91 108 134 216 168 423 11 69 23 137 26 153 l6 27 419 0 c230 0 419 -1 419 -2z"/>
+                            <path d="M2435 3539 c-140 -18 -304 -81 -434 -167 -73 -48 -206 -182 -256 -257 -228 -346 -228 -764 0 -1110 50 -75 183 -209 256 -257 381 -251 848 -229 1191 56 301 249 427 671 311 1041 -111 356 -403 618 -761 685 -82 15 -230 20 -307 9z m300 -420 c175 -54 329 -209 387 -389 29 -91 29 -249 0 -340 -59 -182 -210 -333 -392 -391 -92 -30 -240 -30 -335 -1 -185 57 -338 208 -397 392 -29 91 -29 249 1 340 69 217 269 385 491 413 59 8 182 -4 245 -24z"/>
+                        </g>
+                    </svg>
+                </span>
+                <span class="label">Настройки</span>
             </div>
         </div>
     </div>
 
-    <!-- Завершающая мольба -->
-    <div class="dua-section">
-        <div class="title">Завершающая мольба</div>
-        <div class="source">—</div>
-        <div class="wrapper">
-            <div class="fragment">
-                <div class="ar">اللَّهُمَّ تَقَبَّلْ مِنَّا</div>
-                <div class="trsc">Аллахумма такаббаль минна</div>
-                <div class="ru">О Аллах, прими от нас</div>
-            </div>
-        </div>
-    </div>
+    <script>
+        // Получаем элементы
+        const modal = document.getElementById('settingsModal');
+        const settingsBtn = document.getElementById('settingsButton');
+        const closeBtn = document.getElementById('closeSettings');
+        
+        // Элементы управления
+        const arSizeInput = document.getElementById('arSize');
+        const trscSizeInput = document.getElementById('trscSize');
+        const ruSizeInput = document.getElementById('ruSize');
+        const showArCheck = document.getElementById('showAr');
+        const showTrscCheck = document.getElementById('showTrsc');
+        const showRuCheck = document.getElementById('showRu');
+        
+        // Дисплеи значений
+        const arSizeValue = document.getElementById('arSizeValue');
+        const trscSizeValue = document.getElementById('trscSizeValue');
+        const ruSizeValue = document.getElementById('ruSizeValue');
 
+        // Корневой элемент для CSS переменных
+        const root = document.documentElement;
+
+        // Функции обновления
+        function updateArSize() {
+            const val = arSizeInput.value + 'px';
+            root.style.setProperty('--ar-size', val);
+            arSizeValue.textContent = val;
+        }
+
+        function updateTrscSize() {
+            const val = trscSizeInput.value + 'em';
+            root.style.setProperty('--trsc-size', val);
+            trscSizeValue.textContent = val;
+        }
+
+        function updateRuSize() {
+            const val = ruSizeInput.value + 'em';
+            root.style.setProperty('--ru-size', val);
+            ruSizeValue.textContent = val;
+        }
+
+        function updateVisibility() {
+            root.style.setProperty('--ar-display', showArCheck.checked ? 'block' : 'none');
+            root.style.setProperty('--trsc-display', showTrscCheck.checked ? 'block' : 'none');
+            root.style.setProperty('--ru-display', showRuCheck.checked ? 'block' : 'none');
+        }
+
+        // Загрузка сохраненных настроек (если есть)
+        function loadSettings() {
+            const savedArSize = localStorage.getItem('arSize');
+            const savedTrscSize = localStorage.getItem('trscSize');
+            const savedRuSize = localStorage.getItem('ruSize');
+            const savedShowAr = localStorage.getItem('showAr');
+            const savedShowTrsc = localStorage.getItem('showTrsc');
+            const savedShowRu = localStorage.getItem('showRu');
+            
+            if (savedArSize) {
+                arSizeInput.value = savedArSize;
+                updateArSize();
+            }
+            if (savedTrscSize) {
+                trscSizeInput.value = savedTrscSize;
+                updateTrscSize();
+            }
+            if (savedRuSize) {
+                ruSizeInput.value = savedRuSize;
+                updateRuSize();
+            }
+            
+            if (savedShowAr !== null) {
+                showArCheck.checked = savedShowAr === 'true';
+            }
+            if (savedShowTrsc !== null) {
+                showTrscCheck.checked = savedShowTrsc === 'true';
+            }
+            if (savedShowRu !== null) {
+                showRuCheck.checked = savedShowRu === 'true';
+            }
+            
+            updateVisibility();
+        }
+
+        // Сохранение настроек
+        function saveSettings() {
+            localStorage.setItem('arSize', arSizeInput.value);
+            localStorage.setItem('trscSize', trscSizeInput.value);
+            localStorage.setItem('ruSize', ruSizeInput.value);
+            localStorage.setItem('showAr', showArCheck.checked);
+            localStorage.setItem('showTrsc', showTrscCheck.checked);
+            localStorage.setItem('showRu', showRuCheck.checked);
+        }
+
+        // Открыть модальное окно
+        settingsBtn.addEventListener('click', () => {
+            modal.style.display = 'flex';
+        });
+
+        // Закрыть и сохранить
+        closeBtn.addEventListener('click', () => {
+            saveSettings();
+            modal.style.display = 'none';
+        });
+
+        // Закрыть по клику на overlay
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                saveSettings();
+                modal.style.display = 'none';
+            }
+        });
+
+        // Слушатели изменений
+        arSizeInput.addEventListener('input', updateArSize);
+        trscSizeInput.addEventListener('input', updateTrscSize);
+        ruSizeInput.addEventListener('input', updateRuSize);
+        
+        showArCheck.addEventListener('change', updateVisibility);
+        showTrscCheck.addEventListener('change', updateVisibility);
+        showRuCheck.addEventListener('change', updateVisibility);
+
+        // Инициализация
+        loadSettings();
+    </script>
 </body>
 </html>
