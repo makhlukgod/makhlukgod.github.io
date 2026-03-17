@@ -1,4 +1,4 @@
-
+document.addEventListener("DOMContentLoaded", function() {
         // Получаем элементы
         const modal = document.getElementById('settingsModal');
         const settingsBtn = document.getElementById('settingsButton');
@@ -120,3 +120,4 @@
 
         // Инициализация
         loadSettings(); 
+ });
