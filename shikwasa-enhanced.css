@@ -1,0 +1,254 @@
+/* shikwasa-enhanced.css */
+.shk-custom-controls {
+  margin-top: 10px;
+  padding: 10px;
+  border-top: 1px solid rgba(0,0,0,0.1);
+}
+
+.shk-controls-row {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 15px;
+}
+
+.shk-btn-bookmark,
+.shk-btn-share,
+.shk-btn-donate {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 5px 10px;
+  border-radius: 5px;
+  transition: all 0.2s;
+}
+
+.shk-btn-bookmark:hover,
+.shk-btn-share:hover,
+.shk-btn-donate:hover {
+  background: rgba(0,0,0,0.1);
+  transform: scale(1.05);
+}
+
+.shk-share-dropdown {
+  position: relative;
+}
+
+.shk-share-options {
+  display: none;
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  z-index: 1000;
+}
+
+.shk-share-options.show {
+  display: block;
+}
+
+.shk-share-options button {
+  display: block;
+  width: 100%;
+  padding: 8px 15px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.shk-share-options button:hover {
+  background: #f0f0f0;
+}
+
+.shk-panels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.shk-episode-list,
+.shk-bookmarks-panel {
+  background: rgba(0,0,0,0.05);
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.shk-episodes-list {
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.shk-episode-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+  margin-bottom: 5px;
+  background: white;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.shk-episode-item:hover {
+  transform: translateX(5px);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.shk-episode-item.active {
+  background: #e3f2fd;
+  border-left: 3px solid #00869B;
+}
+
+.shk-episode-info {
+  flex: 1;
+}
+
+.shk-episode-title {
+  font-weight: 500;
+  margin-bottom: 5px;
+}
+
+.shk-episode-meta {
+  font-size: 12px;
+  color: #666;
+}
+
+.shk-episode-badge {
+  background: #4caf50;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  margin: 0 10px;
+}
+
+.shk-episode-play {
+  background: #00869B;
+  color: white;
+  border: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.shk-episode-play:hover {
+  transform: scale(1.1);
+}
+
+.shk-bookmark-item {
+  background: white;
+  padding: 10px;
+  margin-bottom: 8px;
+  border-radius: 5px;
+}
+
+.shk-bookmark-time {
+  font-weight: bold;
+  color: #00869B;
+  margin-bottom: 5px;
+}
+
+.shk-bookmark-note {
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.shk-bookmark-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.shk-bookmark-actions button {
+  padding: 5px 10px;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.shk-bookmark-play {
+  background: #00869B;
+  color: white;
+}
+
+.shk-bookmark-delete {
+  background: #f44336;
+  color: white;
+}
+
+.shk-notification {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #333;
+  color: white;
+  padding: 15px 20px;
+  border-radius: 8px;
+  opacity: 0;
+  transform: translateY(100px);
+  transition: all 0.3s;
+  z-index: 10000;
+}
+
+.shk-notification.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.shk-donation-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10001;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s;
+}
+
+.shk-donation-modal.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.shk-donation-content {
+  background: white;
+  padding: 30px;
+  border-radius: 15px;
+  text-align: center;
+  max-width: 400px;
+}
+
+.shk-donation-button {
+  background: #ff4444;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  margin: 10px;
+  cursor: pointer;
+}
+
+.shk-donation-close {
+  background: #666;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+}

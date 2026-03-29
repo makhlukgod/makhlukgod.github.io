@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎙️ Мой Подкаст Плеер</title>
+  
+  <!-- Стили -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/shikwasa@2.2.1/dist/style.css">
+  <link rel="stylesheet" href="shikwasa-enhanced.css">
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    
+    .container {
+      width: 100%;
+      max-width: 900px;
+    }
+    
+    .header {
+      text-align: center;
+      color: white;
+      margin-bottom: 30px;
+    }
+    
+    .header h1 {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .header p {
+      opacity: 0.9;
+      font-size: 1.1rem;
+    }
+    
+    #player-container {
+      background: white;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    
+    .footer {
+      text-align: center;
+      color: white;
+      margin-top: 30px;
+      opacity: 0.8;
+      font-size: 0.9rem;
+    }
+    
+    .footer a {
+      color: white;
+      text-decoration: none;
+      border-bottom: 1px dotted;
+    }
+    
+    @media (max-width: 768px) {
+      .header h1 { font-size: 1.8rem; }
+      body { padding: 10px; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>🎙️ Подкаст Плеер</h1>
+    <p>С поддержкой RSS, закладок и сохранением прогресса</p>
+  </div>
+  
+  <div id="player-container"></div>
+  
+  <div class="footer">
+    <p>✨ Оффлайн-плеер | 💾 Прогресс сохраняется | 🔖 Закладки работают</p>
+    <p><a href="#" id="reset-progress" style="cursor: pointer;">Сбросить весь прогресс</a></p>
+  </div>
+</div>
+
+<!-- Подключаем скрипты -->
+<script src="https://cdn.jsdelivr.net/npm/shikwasa@2.2.1/dist/shikwasa.min.js"></script>
+<script type="module">
+  // Импортируем расширенный плеер
+  import { Player } from './shikwasa-enhanced.js';
+  
+  // Пример подкаста (замените на ваш RSS или локальные файлы)
+  const player = new Player({
+    container: () => document.querySelector('#player-container'),
+    
+    // Вариант 1: Локальные аудиофайлы (для оффлайн-демо)
+    audio: {
+      title: 'Введение в подкаст',
+      artist: 'Ваше Имя',
+      src: './audio/episode1.mp3',  // <- ПУТЬ К ВАШЕМУ ФАЙЛУ
+      cover: './images/cover.jpg',   // <- ОБЛОЖКА (опционально)
+      duration: 3600  // 1 час (опционально)
+    },
+    
+    // Вариант 2: RSS лента (если есть онлайн-подкаст)
+    // rssUrl: 'https://example.com/podcast.rss',
+    
+    // Включаем все фичи
+    enableProgressTracking: true,
+    enableBookmarks: true,
+    socialSharing: true,
+    autoNextEpisode: false,  // Для локальных файлов отключаем
+    
+    // Настройки плеера
+    themeColor: '#764ba2',
+    theme: 'auto',
+    speedOptions: [0.5, 0.75, 1, 1.25, 1.5, 2],
+    download: true
+  });
+  
+  // Кнопка сброса прогресса
+  document.getElementById('reset-progress').addEventListener('click', (e) => {
+    e.preventDefault();
+    if (confirm('Сбросить весь прогресс прослушивания и закладки?')) {
+      localStorage.removeItem('shikwasa_progress');
+      localStorage.removeItem('shikwasa_bookmarks');
+      alert('Прогресс сброшен! Обновите страницу.');
+      location.reload();
+    }
+  });
+  
+  // Логируем события
+  player.on('progressSaved', (progress) => {
+    console.log(`💾 Сохранен прогресс: ${Math.floor(progress.progress)}/${progress.duration} секунд`);
+  });
+  
+  player.on('bookmarkAdded', (bookmark) => {
+    console.log(`🔖 Добавлена закладка: ${bookmark.formattedTime} - ${bookmark.note}`);
+  });
+  
+  console.log('✅ Плеер загружен и готов к работе!');
+</script>
+</body>
+</html>
