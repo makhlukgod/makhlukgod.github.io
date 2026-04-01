@@ -1,12 +1,19 @@
 // shikwasa-enhanced.js
-// Расширенная версия Shikwasa с поддержкой RSS, прогресса, закладок и интеграций
+// Расширенная версия Shikwasa (без внешних зависимостей)
 
-import { Player as BasePlayer } from 'shikwasa';
-import jsmediatags from 'jsmediatags';
+// Проверяем, загружена ли оригинальная библиотека
+if (typeof window.Shikwasa === 'undefined') {
+    console.warn('Shikwasa not loaded, using fallback');
+}
 
-class EnhancedPlayer extends BasePlayer {
+// Создаем расширенный класс
+class EnhancedPlayer {
   constructor(options) {
-    super(options);
+    // Сохраняем опции
+    this.options = options;
+    this.container = typeof options.container === 'function' 
+        ? options.container() 
+        : options.container;
     
     // Новые опции
     this.rssUrl = options.rssUrl || null;
@@ -14,35 +21,78 @@ class EnhancedPlayer extends BasePlayer {
     this.enableBookmarks = options.enableBookmarks !== false;
     this.socialSharing = options.socialSharing || false;
     this.donationUrl = options.donationUrl || null;
+    this.autoNextEpisode = options.autoNextEpisode || false;
     
     // Состояние
     this.episodes = [];
     this.currentEpisodeIndex = 0;
     this.bookmarks = this.loadBookmarks();
     this.progressData = this.loadProgress();
+    this.player = null; // Будет хранить оригинальный плеер
     
-    // Инициализация
-    if (this.rssUrl) {
-      this.loadRSSFeed();
-    }
+    // Инициализируем оригинальный плеер
+    this.initOriginalPlayer();
     
-    if (this.enableProgressTracking && this.progressData[this.getCurrentAudioId()]) {
-      this.restoreProgress();
+    // Добавляем обработчики
+    if (this.enableProgressTracking) {
+      this.setupProgressTracking();
     }
     
     // Добавляем UI элементы
     this.addCustomUI();
-    
-    // Слушаем события для сохранения прогресса
-    if (this.enableProgressTracking) {
-      this.on('timeupdate', this.saveProgress.bind(this));
-      this.on('ended', this.markAsCompleted.bind(this));
+  }
+  
+  initOriginalPlayer() {
+    // Создаем экземпляр оригинального Shikwasa
+    if (typeof Shikwasa !== 'undefined' && Shikwasa.Player) {
+      this.player = new Shikwasa.Player(this.options);
+      
+      // Проксируем методы
+      this.play = () => this.player.play();
+      this.pause = () => this.player.pause();
+      this.toggle = () => this.player.toggle();
+      this.seek = (time) => this.player.seek(time);
+      this.update = (audio) => this.player.update(audio);
+      this.destroy = () => this.player.destroy();
+      this.on = (event, callback) => this.player.on(event, callback);
+      
+      // Свойства
+      Object.defineProperty(this, 'currentTime', {
+        get: () => this.player.currentTime
+      });
+      Object.defineProperty(this, 'duration', {
+        get: () => this.player.duration
+      });
+      Object.defineProperty(this, 'playbackRate', {
+        get: () => this.player.playbackRate,
+        set: (val) => { this.player.playbackRate = val; }
+      });
+    } else {
+      console.error('Shikwasa library not loaded!');
     }
+  }
+  
+  setupProgressTracking() {
+    if (!this.player) return;
+    
+    // Сохраняем прогресс каждые 5 секунд
+    this.progressInterval = setInterval(() => {
+      if (this.player && this.player.currentTime > 0) {
+        this.saveProgress();
+      }
+    }, 5000);
+    
+    // При завершении
+    this.player.on('ended', () => {
+      this.markAsCompleted();
+    });
   }
   
   // ==================== RSS ПОДДЕРЖКА ====================
   
   async loadRSSFeed() {
+    if (!this.rssUrl) return;
+    
     try {
       // Используем CORS-прокси для обхода ограничений
       const proxyUrl = 'https://api.allorigins.win/raw?url=';
@@ -82,7 +132,7 @@ class EnhancedPlayer extends BasePlayer {
       const enclosure = item.querySelector('enclosure');
       const audioUrl = enclosure?.getAttribute('url');
       
-      // Парсим длительность из iTunes тега
+      // Парсим длительность
       const durationElement = item.querySelector('itunes\\:duration, duration');
       let duration = 0;
       if (durationElement) {
@@ -118,7 +168,7 @@ class EnhancedPlayer extends BasePlayer {
   
   renderEpisodeList() {
     const container = document.querySelector('.shk-episode-list');
-    if (!container) return;
+    if (!container || this.episodes.length === 0) return;
     
     const listHtml = `
       <div class="shk-episodes-panel">
@@ -161,55 +211,58 @@ class EnhancedPlayer extends BasePlayer {
     this.currentEpisodeIndex = index;
     
     // Обновляем плеер
-    this.update({
-      title: episode.title,
-      artist: 'Подкаст',
-      cover: episode.cover || this.options.audio?.cover,
-      src: episode.audioUrl,
-      duration: episode.duration
-    });
+    if (this.player) {
+      this.player.update({
+        title: episode.title,
+        artist: 'Подкаст',
+        cover: episode.cover || this.options.audio?.cover,
+        src: episode.audioUrl,
+        duration: episode.duration
+      });
+    }
     
     // Восстанавливаем прогресс
     if (this.progressData[episode.id]) {
       setTimeout(() => {
-        this.seek(this.progressData[episode.id].progress);
+        if (this.player) {
+          this.player.seek(this.progressData[episode.id].progress);
+        }
       }, 100);
     }
     
     this.emit('episodeChange', episode);
-    this.play();
+    if (this.player) {
+      this.player.play();
+    }
   }
   
-  // ==================== ЭКСПОРТ ПРОГРЕССА ====================
+  // ==================== ПРОГРЕСС ====================
   
   getCurrentAudioId() {
     const currentSrc = this.options.audio?.src;
     if (!currentSrc) return null;
     
-    // Используем URL как ID или находим ID в списке эпизодов
     const episode = this.episodes.find(ep => ep.audioUrl === currentSrc);
     return episode?.id || currentSrc;
   }
   
   saveProgress() {
-    if (!this.enableProgressTracking) return;
+    if (!this.enableProgressTracking || !this.player) return;
     
     const audioId = this.getCurrentAudioId();
     if (!audioId) return;
     
     const progress = {
       id: audioId,
-      progress: this.currentTime,
-      duration: this.duration,
+      progress: this.player.currentTime,
+      duration: this.player.duration,
       timestamp: Date.now(),
-      completed: this.currentTime >= this.duration - 1,
+      completed: this.player.currentTime >= this.player.duration - 1,
       title: this.options.audio?.title
     };
     
     this.progressData[audioId] = progress;
     this.persistProgress();
-    
-    // Триггерим событие
     this.emit('progressSaved', progress);
   }
   
@@ -230,20 +283,6 @@ class EnhancedPlayer extends BasePlayer {
     }
   }
   
-  restoreProgress() {
-    const audioId = this.getCurrentAudioId();
-    if (!audioId) return;
-    
-    const progress = this.progressData[audioId];
-    if (progress && progress.progress > 5 && progress.progress < this.duration - 10) {
-      // Спрашиваем пользователя
-      const shouldRestore = confirm(`Продолжить с ${this.formatTime(progress.progress)}?`);
-      if (shouldRestore) {
-        this.seek(progress.progress);
-      }
-    }
-  }
-  
   markAsCompleted() {
     const audioId = this.getCurrentAudioId();
     if (audioId && this.progressData[audioId]) {
@@ -252,7 +291,7 @@ class EnhancedPlayer extends BasePlayer {
       this.emit('episodeCompleted', this.progressData[audioId]);
       
       // Автоматически загружаем следующий эпизод
-      if (this.options.autoNextEpisode && this.currentEpisodeIndex < this.episodes.length - 1) {
+      if (this.autoNextEpisode && this.currentEpisodeIndex < this.episodes.length - 1) {
         setTimeout(() => this.loadEpisode(this.currentEpisodeIndex + 1), 1000);
       }
     }
@@ -261,13 +300,13 @@ class EnhancedPlayer extends BasePlayer {
   // ==================== ЗАКЛАДКИ ====================
   
   addBookmark(note = '') {
-    if (!this.enableBookmarks) return false;
+    if (!this.enableBookmarks || !this.player) return false;
     
     const bookmark = {
       id: `bm_${Date.now()}_${Math.random()}`,
-      time: this.currentTime,
-      formattedTime: this.formatTime(this.currentTime),
-      note: note || `Отметка в ${this.formatTime(this.currentTime)}`,
+      time: this.player.currentTime,
+      formattedTime: this.formatTime(this.player.currentTime),
+      note: note || `Отметка в ${this.formatTime(this.player.currentTime)}`,
       timestamp: Date.now(),
       audioId: this.getCurrentAudioId(),
       audioTitle: this.options.audio?.title
@@ -276,10 +315,7 @@ class EnhancedPlayer extends BasePlayer {
     this.bookmarks.push(bookmark);
     this.persistBookmarks();
     this.renderBookmarks();
-    
     this.emit('bookmarkAdded', bookmark);
-    
-    // Показываем уведомление
     this.showNotification('Закладка добавлена!', bookmark.formattedTime);
     
     return bookmark;
@@ -307,12 +343,6 @@ class EnhancedPlayer extends BasePlayer {
     this.persistBookmarks();
     this.renderBookmarks();
     this.emit('bookmarkRemoved', bookmarkId);
-  }
-  
-  goToBookmark(bookmark) {
-    this.seek(bookmark.time);
-    this.play();
-    this.emit('bookmarkUsed', bookmark);
   }
   
   renderBookmarks() {
@@ -345,12 +375,13 @@ class EnhancedPlayer extends BasePlayer {
     
     container.innerHTML = bookmarksHtml;
     
-    // Добавляем обработчики
     container.querySelectorAll('.shk-bookmark-play').forEach(btn => {
       btn.addEventListener('click', () => {
         const time = parseFloat(btn.dataset.time);
-        this.seek(time);
-        this.play();
+        if (this.player) {
+          this.player.seek(time);
+          this.player.play();
+        }
       });
     });
     
@@ -362,13 +393,13 @@ class EnhancedPlayer extends BasePlayer {
     });
   }
   
-  // ==================== ИНТЕГРАЦИЯ С ВНЕШНИМИ СЕРВИСАМИ ====================
+  // ==================== ИНТЕГРАЦИИ ====================
   
   shareCurrentEpisode(platform = 'twitter') {
     const episode = this.episodes[this.currentEpisodeIndex];
     if (!episode) return;
     
-    const currentTime = this.currentTime;
+    const currentTime = this.player ? this.player.currentTime : 0;
     const shareText = `Слушаю: ${episode.title}${currentTime > 0 ? ` на ${this.formatTime(currentTime)}` : ''}`;
     const shareUrl = encodeURIComponent(window.location.href);
     const shareTextEncoded = encodeURIComponent(shareText);
@@ -397,49 +428,19 @@ class EnhancedPlayer extends BasePlayer {
   }
   
   showDonationPrompt() {
-    if (!this.donationUrl) {
-      console.warn('No donation URL provided');
-      return;
-    }
+    if (!this.donationUrl) return;
     
-    const modal = document.createElement('div');
-    modal.className = 'shk-donation-modal';
-    modal.innerHTML = `
-      <div class="shk-donation-content">
-        <h3>❤️ Поддержите подкаст</h3>
-        <p>Если вам нравится этот подкаст, вы можете поддержать авторов!</p>
-        <button class="shk-donation-button">Поддержать</button>
-        <button class="shk-donation-close">Закрыть</button>
-      </div>
-    `;
-    
-    document.body.appendChild(modal);
-    
-    modal.querySelector('.shk-donation-button').addEventListener('click', () => {
+    if (confirm('❤️ Поддержать автора?')) {
       window.open(this.donationUrl, '_blank');
-      modal.remove();
       this.emit('donationOpened');
-    });
-    
-    modal.querySelector('.shk-donation-close').addEventListener('click', () => {
-      modal.remove();
-    });
-    
-    // Показываем модальное окно раз в 5 прослушанных эпизодов
-    const completedCount = Object.values(this.progressData).filter(p => p.completed).length;
-    if (completedCount % 5 === 0 && completedCount > 0) {
-      setTimeout(() => modal.classList.add('show'), 1000);
     }
   }
   
-  // ==================== UI КОМПОНЕНТЫ ====================
+  // ==================== UI ====================
   
   addCustomUI() {
-    // Находим контейнер плеера
-    const container = this.options.container;
-    if (!container || typeof container === 'function') return;
+    if (!this.container) return;
     
-    // Создаем дополнительный UI
     const customUI = document.createElement('div');
     customUI.className = 'shk-custom-controls';
     customUI.innerHTML = `
@@ -471,16 +472,14 @@ class EnhancedPlayer extends BasePlayer {
       </div>
     `;
     
-    container.appendChild(customUI);
+    this.container.appendChild(customUI);
     
     // Добавляем обработчики
-    if (this.enableBookmarks) {
-      const bookmarkBtn = customUI.querySelector('.shk-btn-bookmark');
-      bookmarkBtn?.addEventListener('click', () => {
-        const note = prompt('Введите заметку для закладки (опционально):');
-        this.addBookmark(note || '');
-      });
-    }
+    const bookmarkBtn = customUI.querySelector('.shk-btn-bookmark');
+    bookmarkBtn?.addEventListener('click', () => {
+      const note = prompt('Введите заметку для закладки (опционально):');
+      this.addBookmark(note || '');
+    });
     
     if (this.socialSharing) {
       const shareBtn = customUI.querySelector('.shk-btn-share');
@@ -498,13 +497,16 @@ class EnhancedPlayer extends BasePlayer {
       });
     }
     
-    if (this.donationUrl) {
-      const donateBtn = customUI.querySelector('.shk-btn-donate');
-      donateBtn?.addEventListener('click', () => this.showDonationPrompt());
+    const donateBtn = customUI.querySelector('.shk-btn-donate');
+    donateBtn?.addEventListener('click', () => this.showDonationPrompt());
+    
+    // Загружаем RSS если указан
+    if (this.rssUrl) {
+      this.loadRSSFeed();
     }
   }
   
-  // ==================== ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ====================
+  // ==================== ВСПОМОГАТЕЛЬНЫЕ ====================
   
   formatTime(seconds) {
     if (isNaN(seconds)) return '0:00';
@@ -542,11 +544,11 @@ class EnhancedPlayer extends BasePlayer {
     }, 3000);
   }
   
-  // Эмит событий (добавляем, если нет в базовом классе)
   emit(eventName, data) {
     const customEvent = new CustomEvent(`shikwasa:${eventName}`, { detail: data });
     this.container?.dispatchEvent(customEvent);
   }
 }
 
+// Экспортируем класс
 export { EnhancedPlayer as Player };
