@@ -94,7 +94,7 @@
 <script src="https://cdn.jsdelivr.net/npm/shikwasa@2.2.1/dist/shikwasa.min.js"></script>
 <script type="module">
   // Импортируем расширенный плеер
-  import { Player } from './shikwasa-enhanced.js';
+  import { Player } from 'https://nasihat.tatar/shikwasa-enhanced.js';
   
   // Пример подкаста (замените на ваш RSS или локальные файлы)
   const player = new Player({
@@ -104,8 +104,8 @@
     audio: {
       title: 'Введение в подкаст',
       artist: 'Ваше Имя',
-      src: './audio/2.mp3',  // <- ПУТЬ К ВАШЕМУ ФАЙЛУ
-      cover: './css/images/overlay-pattern.png',   // <- ОБЛОЖКА (опционально)
+      src: 'https://nasihat.tatar/audio/2.mp3',  // <- ПУТЬ К ВАШЕМУ ФАЙЛУ
+      cover: 'https://nasihat.tatar/css/images/overlay-pattern.png',   // <- ОБЛОЖКА (опционально)
       duration: 3600  // 1 час (опционально)
     },
     
