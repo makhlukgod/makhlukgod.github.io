@@ -1,30 +1,282 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Shikwasa Test</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎙️ Подкаст Плеер</title>
+    
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/shikwasa@2.2.1/dist/style.css">
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: system-ui, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .rss-input {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .rss-input input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+        
+        .rss-input button {
+            padding: 12px 24px;
+            background: #764ba2;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        .rss-input button:hover {
+            background: #5a3780;
+        }
+        
+        .examples {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .examples a {
+            color: #764ba2;
+            cursor: pointer;
+            text-decoration: underline;
+            margin: 0 5px;
+        }
+        
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 20px;
+        }
+        
+        .footer a {
+            color: white;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        
+        #player-container {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+        }
+        
+        .shk-custom-controls {
+            padding: 15px;
+            border-top: 1px solid #eee;
+        }
+        
+        .shk-controls-row {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+        
+        .shk-controls-row button {
+            padding: 8px 16px;
+            background: #764ba2;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .shk-panels {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .shk-episode-list, .shk-bookmarks-panel {
+            background: #f5f5f5;
+            border-radius: 10px;
+            padding: 10px;
+        }
+        
+        .shk-episode-item {
+            background: white;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .shk-episode-item.active {
+            background: #e3f2fd;
+            border-left: 3px solid #764ba2;
+        }
+        
+        .shk-episode-title {
+            font-weight: 500;
+            font-size: 13px;
+        }
+        
+        .shk-episode-play {
+            background: #764ba2;
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        .shk-bookmark-item {
+            background: white;
+            padding: 8px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+        }
+        
+        .shk-bookmark-time {
+            font-weight: bold;
+            color: #764ba2;
+            font-size: 12px;
+        }
+        
+        .shk-bookmark-actions {
+            margin-top: 5px;
+            display: flex;
+            gap: 5px;
+        }
+        
+        .shk-bookmark-actions button {
+            padding: 4px 8px;
+            font-size: 11px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .shk-bookmark-play {
+            background: #4caf50;
+            color: white;
+        }
+        
+        .shk-bookmark-delete {
+            background: #f44336;
+            color: white;
+        }
+    </style>
 </head>
 <body>
-    <div id="player"></div>
+<div class="container">
+    <div class="card">
+        <h3>📡 Подкаст плеер</h3>
+        <div class="rss-input">
+            <input type="text" id="rss-url" placeholder="Введите RSS ссылку">
+            <button id="load-rss">Загрузить</button>
+        </div>
+        <div class="examples">
+            🔥 Примеры:
+            <a data-rss="https://feeds.megaphone.fm/ESP1614110167">The Daily</a> |
+            <a data-rss="https://feeds.simplecast.com/54nAGcIl">How I Built This</a>
+        </div>
+    </div>
     
-    <script src="https://cdn.jsdelivr.net/npm/shikwasa@2.2.1/dist/shikwasa.min.js"></script>
-    <script type="module">
-        // Простой тест без расширений
-        import { Player } from './shikwasa-enhanced.js';
+    <div id="player-container"></div>
+    
+    <div class="footer">
+        <a id="reset-progress">🗑️ Сбросить прогресс</a>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/shikwasa@2.2.1/dist/shikwasa.min.js"></script>
+<script type="module">
+    import { Player } from './shikwasa-enhanced.js';
+    
+    let currentPlayer = null;
+    
+    function initPlayer(rssUrl = null) {
+        if (currentPlayer) {
+            try {
+                currentPlayer.destroy();
+            } catch(e) {}
+            document.querySelector('#player-container').innerHTML = '';
+        }
         
-        console.log('Player imported:', typeof Player);
-        
-        const player = new Player({
-            container: () => document.querySelector('#player'),
-            audio: {
-                title: 'Test',
-                artist: 'Test Artist',
-                src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'
-            }
+        currentPlayer = new Player({
+            container: () => document.querySelector('#player-container'),
+            rssUrl: rssUrl,
+            audio: rssUrl ? null : {
+                title: 'Введите RSS подкаста',
+                artist: 'Подкаст',
+                src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+                duration: 120
+            },
+            enableProgressTracking: true,
+            enableBookmarks: true,
+            socialSharing: true,
+            autoNextEpisode: true,
+            themeColor: '#764ba2'
         });
         
-        console.log('Player created:', player);
-    </script>
-</body>
-</html>
+        currentPlayer.on('rssLoaded', (episodes) => {
+            alert(`✅ Загружено ${episodes.length} эпизодов!`);
+        });
+        
+        currentPlayer.on('rssError', (error) => {
+            alert('❌ Ошибка загрузки RSS. Проверьте ссылку.');
+        });
+    }
+    
+    initPlayer();
+    
+    document.getElementById('load-rss').addEventListener('click', () => {
+        const url = document.getElementById('rss-url').value.trim();
+        if (url) initPlayer(url);
+        else alert('Введите RSS ссылку');
+    });
+    
+    document.querySelectorAll('[data-rss]').forEach(link => {
+        link.addEventListener('click', () => {
+            const url = link.getAttribute('data-rss');
+            document.getElementById('rss-url').value = url;
+            initPlayer(url);
+        });
+    });
+    
+    document.getElementById('reset-progress').addEventListener('click', () => {
+        if (confirm('Сбросить весь прогресс?')) {
+            localStorage.removeItem('shikwasa_progress');
+            localStorage.removeItem('shikwasa_bookmarks');
+            alert('Сброшено! Обновите страницу.');
+            location.reload();
+        }
+    });
+</
