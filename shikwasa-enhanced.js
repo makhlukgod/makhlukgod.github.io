@@ -1,12 +1,5 @@
 // shikwasa-enhanced.js
-// Расширенная версия Shikwasa (без внешних зависимостей)
-
-// Проверяем, загружена ли оригинальная библиотека
-if (typeof window.Shikwasa === 'undefined') {
-    console.warn('Shikwasa not loaded, using fallback');
-}
-
-// Создаем расширенный класс 
+// Исправленная версия с корректной обработкой аудио
 
 class EnhancedPlayer {
   constructor(options) {
@@ -23,7 +16,7 @@ class EnhancedPlayer {
     this.socialSharing = options.socialSharing || false;
     this.donationUrl = options.donationUrl || null;
     this.autoNextEpisode = options.autoNextEpisode || false;
-    this.rssService = options.rssService || 'jsonfeed'; // 'jsonfeed' или 'rss2json'
+    this.rssService = options.rssService || 'rss2json';
     
     // Состояние
     this.episodes = [];
@@ -31,68 +24,156 @@ class EnhancedPlayer {
     this.bookmarks = this.loadBookmarks();
     this.progressData = this.loadProgress();
     this.player = null;
+    this.isInitialized = false;
     
-    // Инициализируем оригинальный плеер
-    this.initOriginalPlayer();
-    
-    // Добавляем обработчики
-    if (this.enableProgressTracking) {
-      this.setupProgressTracking();
+    // Инициализация
+    this.init();
+  }
+  
+  async init() {
+    // Ждем загрузки Shikwasa
+    if (typeof Shikwasa === 'undefined') {
+      console.log('Waiting for Shikwasa...');
+      await this.waitForShikwasa();
     }
     
-    // Добавляем UI элементы
+    this.initOriginalPlayer();
+    this.setupProgressTracking();
     this.addCustomUI();
     
-    // Загружаем RSS если указан
     if (this.rssUrl) {
-      this.loadRSSFeed();
+      await this.loadRSSFeed();
     }
   }
   
+  waitForShikwasa() {
+    return new Promise((resolve) => {
+      const checkInterval = setInterval(() => {
+        if (typeof Shikwasa !== 'undefined' && Shikwasa.Player) {
+          clearInterval(checkInterval);
+          resolve();
+        }
+      }, 100);
+      
+      // Таймаут через 5 секунд
+      setTimeout(() => {
+        clearInterval(checkInterval);
+        console.error('Shikwasa failed to load');
+        resolve();
+      }, 5000);
+    });
+  }
+  
   initOriginalPlayer() {
-    if (typeof Shikwasa !== 'undefined' && Shikwasa.Player) {
-      this.player = new Shikwasa.Player(this.options);
+    try {
+      // Создаем копию опций для оригинального плеера
+      const playerOptions = {
+        container: this.options.container,
+        audio: this.options.audio ? { ...this.options.audio } : null,
+        themeColor: this.options.themeColor || '#764ba2',
+        theme: this.options.theme || 'auto',
+        autoplay: this.options.autoplay || false,
+        muted: this.options.muted || false,
+        preload: this.options.preload || 'metadata',
+        speedOptions: this.options.speedOptions || [0.5, 0.75, 1, 1.25, 1.5, 2],
+        download: this.options.download || false
+      };
+      
+      this.player = new Shikwasa.Player(playerOptions);
+      this.isInitialized = true;
       
       // Проксируем методы
-      this.play = () => this.player.play();
-      this.pause = () => this.player.pause();
-      this.toggle = () => this.player.toggle();
-      this.seek = (time) => this.player.seek(time);
-      this.update = (audio) => this.player.update(audio);
-      this.destroy = () => this.player.destroy();
-      this.on = (event, callback) => this.player.on(event, callback);
+      this.play = () => {
+        if (this.player && this.player.play) {
+          return this.player.play();
+        }
+        return Promise.reject('Player not ready');
+      };
+      
+      this.pause = () => {
+        if (this.player && this.player.pause) {
+          this.player.pause();
+        }
+      };
+      
+      this.toggle = () => {
+        if (this.player && this.player.toggle) {
+          return this.player.toggle();
+        }
+        return Promise.reject('Player not ready');
+      };
+      
+      this.seek = (time) => {
+        if (this.player && this.player.seek) {
+          this.player.seek(time);
+        }
+      };
+      
+      this.update = (audio) => {
+        if (this.player && this.player.update) {
+          // Обновляем опции
+          this.options.audio = { ...this.options.audio, ...audio };
+          this.player.update(audio);
+        } else {
+          console.warn('Player not ready for update');
+        }
+      };
+      
+      this.destroy = () => {
+        if (this.player && this.player.destroy) {
+          this.player.destroy();
+        }
+        if (this.progressInterval) {
+          clearInterval(this.progressInterval);
+        }
+      };
+      
+      this.on = (event, callback) => {
+        if (this.player && this.player.on) {
+          this.player.on(event, callback);
+        }
+      };
       
       // Свойства
       Object.defineProperty(this, 'currentTime', {
-        get: () => this.player.currentTime
+        get: () => this.player ? this.player.currentTime : 0
       });
+      
       Object.defineProperty(this, 'duration', {
-        get: () => this.player.duration
+        get: () => this.player ? this.player.duration : 0
       });
+      
       Object.defineProperty(this, 'playbackRate', {
-        get: () => this.player.playbackRate,
-        set: (val) => { this.player.playbackRate = val; }
+        get: () => this.player ? this.player.playbackRate : 1,
+        set: (val) => { if (this.player) this.player.playbackRate = val; }
       });
-    } else {
-      console.error('Shikwasa library not loaded!');
+      
+      console.log('✅ Original Shikwasa player initialized');
+      
+    } catch (error) {
+      console.error('Failed to initialize Shikwasa:', error);
     }
   }
   
   setupProgressTracking() {
-    if (!this.player) return;
+    if (!this.enableProgressTracking) return;
     
+    // Сохраняем прогресс каждые 5 секунд
     this.progressInterval = setInterval(() => {
       if (this.player && this.player.currentTime > 0) {
         this.saveProgress();
       }
     }, 5000);
     
-    this.player.on('ended', () => {
-      this.markAsCompleted();
-    });
+    // При завершении
+    if (this.player) {
+      this.player.on('ended', () => {
+        this.markAsCompleted();
+      });
+    }
   }
   
-  // ==================== RSS ПОДДЕРЖКА (без CORS-прокси) ====================
+  // ==================== RSS ПОДДЕРЖКА ====================
   
   async loadRSSFeed() {
     if (!this.rssUrl) return;
@@ -100,15 +181,12 @@ class EnhancedPlayer {
     try {
       let feedData;
       
-      // Определяем тип RSS и загружаем соответствующим способом
-      if (this.rssService === 'jsonfeed' && this.rssUrl.endsWith('.json')) {
-        // JSON Feed формат
+      // Определяем тип RSS
+      if (this.rssUrl.endsWith('.json')) {
         feedData = await this.loadJSONFeed();
       } else if (this.rssUrl.startsWith('http://') || this.rssUrl.startsWith('https://')) {
-        // Внешний RSS - используем RSS2JSON сервис (бесплатный, без CORS)
         feedData = await this.loadExternalRSS();
       } else {
-        // Локальный RSS файл
         feedData = await this.loadLocalRSS();
       }
       
@@ -136,8 +214,7 @@ class EnhancedPlayer {
   }
   
   async loadExternalRSS() {
-    // Используем rss2json.com (бесплатный сервис, не требует CORS)
-    // Документация: https://rss2json.com/
+    // Используем rss2json.com
     const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(this.rssUrl)}`;
     const response = await fetch(apiUrl);
     
@@ -158,7 +235,6 @@ class EnhancedPlayer {
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(text, 'text/xml');
     
-    // Проверяем на ошибки парсинга
     const parserError = xmlDoc.querySelector('parsererror');
     if (parserError) {
       throw new Error('Invalid XML format');
@@ -168,31 +244,22 @@ class EnhancedPlayer {
   }
   
   parseFeedData(data) {
-    // Обработка JSON Feed формата
     if (data.version && data.version.includes('https://jsonfeed.org')) {
       return this.parseJSONFeed(data);
     }
-    
-    // Обработка RSS2JSON формата
     if (data.feed && data.items) {
       return this.parseRSS2JSON(data);
     }
-    
-    // Обработка XML формата
     if (data.querySelector) {
       return this.parseXMLFeed(data);
     }
-    
     return [];
   }
   
   parseJSONFeed(json) {
     const episodes = [];
-    
     json.items.forEach((item, index) => {
-      // Находим аудио enclosure
       const audioUrl = item.attachments?.find(a => a.mime_type?.startsWith('audio/'))?.url;
-      
       if (audioUrl) {
         episodes.push({
           id: `ep_${index}_${Date.now()}`,
@@ -207,15 +274,12 @@ class EnhancedPlayer {
         });
       }
     });
-    
     return episodes;
   }
   
   parseRSS2JSON(data) {
     const episodes = [];
-    
     data.items.forEach((item, index) => {
-      // Ищем аудио в enclosures
       let audioUrl = null;
       if (item.enclosure && item.enclosure.link) {
         audioUrl = item.enclosure.link;
@@ -237,7 +301,6 @@ class EnhancedPlayer {
         });
       }
     });
-    
     return episodes;
   }
   
@@ -248,21 +311,17 @@ class EnhancedPlayer {
     
     items.forEach((item, index) => {
       const title = item.querySelector('title')?.textContent || 'Untitled';
-      const description = item.querySelector('description')?.textContent || '';
-      const pubDate = item.querySelector('pubDate')?.textContent || '';
       const enclosure = item.querySelector('enclosure');
       const audioUrl = enclosure?.getAttribute('url');
       
       if (!audioUrl) return;
       
-      // Парсим длительность
       let duration = 0;
       const durationElement = item.querySelector('itunes\\:duration, duration');
       if (durationElement) {
         duration = this.parseDuration(durationElement.textContent);
       }
       
-      // Парсим обложку
       let cover = feedImage;
       const itunesImage = item.querySelector('itunes\\:image');
       if (itunesImage) {
@@ -271,12 +330,12 @@ class EnhancedPlayer {
       
       episodes.push({
         id: `ep_${index}_${Date.now()}`,
-        title,
-        description,
-        pubDate,
-        audioUrl,
-        duration,
-        cover,
+        title: title,
+        description: item.querySelector('description')?.textContent || '',
+        pubDate: item.querySelector('pubDate')?.textContent || '',
+        audioUrl: audioUrl,
+        duration: duration,
+        cover: cover,
         played: false,
         progress: 0
       });
@@ -287,13 +346,8 @@ class EnhancedPlayer {
   
   parseDuration(durationStr) {
     if (!durationStr) return 0;
+    if (!isNaN(durationStr)) return parseInt(durationStr);
     
-    // Если число
-    if (!isNaN(durationStr)) {
-      return parseInt(durationStr);
-    }
-    
-    // Формат HH:MM:SS или MM:SS
     if (durationStr.includes(':')) {
       const parts = durationStr.split(':').map(Number);
       if (parts.length === 3) {
@@ -308,10 +362,10 @@ class EnhancedPlayer {
   
   renderEpisodeList() {
     const container = document.querySelector('.shk-episode-list');
-    if (!container || this.episodes.length === 0) {
-      if (container) {
-        container.innerHTML = '<div class="shk-no-episodes">📭 Нет эпизодов. Проверьте RSS ссылку.</div>';
-      }
+    if (!container) return;
+    
+    if (this.episodes.length === 0) {
+      container.innerHTML = '<div class="shk-no-episodes">📭 Нет эпизодов. Проверьте RSS ссылку.</div>';
       return;
     }
     
@@ -354,38 +408,68 @@ class EnhancedPlayer {
     const episode = this.episodes[index];
     this.currentEpisodeIndex = index;
     
-    if (this.player) {
-      this.player.update({
+    // Обновляем активный класс в UI
+    this.updateActiveEpisodeInUI(index);
+    
+    // Обновляем плеер
+    if (this.player && this.player.update) {
+      const audioData = {
         title: episode.title,
         artist: 'Подкаст',
-        cover: episode.cover || this.options.audio?.cover,
         src: episode.audioUrl,
-        duration: episode.duration
-      });
-    }
-    
-    if (this.progressData[episode.id]) {
+        cover: episode.cover || this.options.audio?.cover
+      };
+      
+      if (episode.duration) {
+        audioData.duration = episode.duration;
+      }
+      
+      console.log('Loading episode:', audioData);
+      this.player.update(audioData);
+      
+      // Небольшая задержка перед воспроизведением
       setTimeout(() => {
-        if (this.player) {
-          this.player.seek(this.progressData[episode.id].progress);
+        if (this.player && this.player.play) {
+          this.player.play().catch(err => {
+            console.warn('Autoplay blocked:', err);
+          });
         }
       }, 100);
+    } else {
+      console.error('Player not ready');
+    }
+    
+    // Восстанавливаем прогресс
+    if (this.progressData[episode.id] && this.player) {
+      setTimeout(() => {
+        if (this.player && this.player.seek) {
+          this.player.seek(this.progressData[episode.id].progress);
+        }
+      }, 200);
     }
     
     this.emit('episodeChange', episode);
-    if (this.player) {
-      this.player.play();
-    }
+  }
+  
+  updateActiveEpisodeInUI(index) {
+    const container = document.querySelector('.shk-episode-list');
+    if (!container) return;
+    
+    container.querySelectorAll('.shk-episode-item').forEach((item, i) => {
+      if (i === index) {
+        item.classList.add('active');
+      } else {
+        item.classList.remove('active');
+      }
+    });
   }
   
   // ==================== ПРОГРЕСС ====================
   
   getCurrentAudioId() {
-    const currentSrc = this.options.audio?.src;
-    if (!currentSrc) return null;
-    
-    const episode = this.episodes.find(ep => ep.audioUrl === currentSrc);
-    return episode?.id || currentSrc;
+    if (!this.options.audio?.src) return null;
+    const episode = this.episodes.find(ep => ep.audioUrl === this.options.audio.src);
+    return episode?.id || this.options.audio.src;
   }
   
   saveProgress() {
@@ -396,8 +480,8 @@ class EnhancedPlayer {
     
     const progress = {
       id: audioId,
-      progress: this.player.currentTime,
-      duration: this.player.duration,
+      progress: this.player.currentTime || 0,
+      duration: this.player.duration || 0,
       timestamp: Date.now(),
       completed: this.player.currentTime >= this.player.duration - 1,
       title: this.options.audio?.title
@@ -412,7 +496,7 @@ class EnhancedPlayer {
     try {
       localStorage.setItem('shikwasa_progress', JSON.stringify(this.progressData));
     } catch (e) {
-      console.warn('Failed to save progress to localStorage', e);
+      console.warn('Failed to save progress', e);
     }
   }
   
@@ -445,9 +529,9 @@ class EnhancedPlayer {
     
     const bookmark = {
       id: `bm_${Date.now()}_${Math.random()}`,
-      time: this.player.currentTime,
-      formattedTime: this.formatTime(this.player.currentTime),
-      note: note || `Отметка в ${this.formatTime(this.player.currentTime)}`,
+      time: this.player.currentTime || 0,
+      formattedTime: this.formatTime(this.player.currentTime || 0),
+      note: note || `Отметка в ${this.formatTime(this.player.currentTime || 0)}`,
       timestamp: Date.now(),
       audioId: this.getCurrentAudioId(),
       audioTitle: this.options.audio?.title
@@ -519,7 +603,7 @@ class EnhancedPlayer {
     container.querySelectorAll('.shk-bookmark-play').forEach(btn => {
       btn.addEventListener('click', () => {
         const time = parseFloat(btn.dataset.time);
-        if (this.player) {
+        if (this.player && this.player.seek) {
           this.player.seek(time);
           this.player.play();
         }
@@ -570,7 +654,6 @@ class EnhancedPlayer {
   
   showDonationPrompt() {
     if (!this.donationUrl) return;
-    
     if (confirm('❤️ Поддержать автора подкаста?')) {
       window.open(this.donationUrl, '_blank');
       this.emit('donationOpened');
@@ -587,7 +670,7 @@ class EnhancedPlayer {
     customUI.innerHTML = `
       <div class="shk-controls-row">
         ${this.enableBookmarks ? `
-          <button class="shk-btn-bookmark" title="Добавить закладку">🔖</button>
+          <button class="shk-btn-bookmark" title="Добавить закладку">🔖 Закладка</button>
         ` : ''}
         
         ${this.socialSharing ? `
@@ -603,7 +686,7 @@ class EnhancedPlayer {
         ` : ''}
         
         ${this.donationUrl ? `
-          <button class="shk-btn-donate" title="Поддержать">❤️</button>
+          <button class="shk-btn-donate" title="Поддержать">❤️ Поддержать</button>
         ` : ''}
       </div>
       
@@ -680,11 +763,29 @@ class EnhancedPlayer {
         ${detail ? `<small>${this.escapeHtml(detail)}</small>` : ''}
       </div>
     `;
+    notification.style.cssText = `
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #333;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      z-index: 10000;
+      opacity: 0;
+      transform: translateY(100px);
+      transition: all 0.3s;
+      font-size: 14px;
+    `;
     
     document.body.appendChild(notification);
-    setTimeout(() => notification.classList.add('show'), 10);
     setTimeout(() => {
-      notification.classList.remove('show');
+      notification.style.opacity = '1';
+      notification.style.transform = 'translateY(0)';
+    }, 10);
+    setTimeout(() => {
+      notification.style.opacity = '0';
+      notification.style.transform = 'translateY(100px)';
       setTimeout(() => notification.remove(), 300);
     }, 3000);
   }
@@ -695,4 +796,5 @@ class EnhancedPlayer {
   }
 }
 
+// Экспортируем класс
 export { EnhancedPlayer as Player };
