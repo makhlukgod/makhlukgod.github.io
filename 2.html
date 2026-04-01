@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Shikwasa Test</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/shikwasa@2.2.1/dist/style.css">
+</head>
+<body>
+    <div id="player"></div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/shikwasa@2.2.1/dist/shikwasa.min.js"></script>
+    <script type="module">
+        // Простой тест без расширений
+        import { Player } from './shikwasa-enhanced.js';
+        
+        console.log('Player imported:', typeof Player);
+        
+        const player = new Player({
+            container: () => document.querySelector('#player'),
+            audio: {
+                title: 'Test',
+                artist: 'Test Artist',
+                src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'
+            }
+        });
+        
+        console.log('Player created:', player);
+    </script>
+</body>
+</html>
