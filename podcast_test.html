@@ -1,151 +1,111 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🎙️ Мой Подкаст Плеер</title>
-  
-  <!-- Стили -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/shikwasa@2.2.1/dist/style.css">
-  <link rel="stylesheet" href="shikwasa-enhanced.css">
-  
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎙️ Подкаст Плеер</title>
     
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
-    }
+    <!-- Стили оригинального Shikwasa -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/shikwasa@2.2.1/dist/style.css">
     
-    .container {
-      width: 100%;
-      max-width: 900px;
-    }
+    <!-- Наши дополнительные стили -->
+    <link rel="stylesheet" href="./shikwasa-enhanced.css">
     
-    .header {
-      text-align: center;
-      color: white;
-      margin-bottom: 30px;
-    }
-    
-    .header h1 {
-      font-size: 2.5rem;
-      margin-bottom: 10px;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
-    }
-    
-    .header p {
-      opacity: 0.9;
-      font-size: 1.1rem;
-    }
-    
-    #player-container {
-      background: white;
-      border-radius: 20px;
-      overflow: hidden;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-    }
-    
-    .footer {
-      text-align: center;
-      color: white;
-      margin-top: 30px;
-      opacity: 0.8;
-      font-size: 0.9rem;
-    }
-    
-    .footer a {
-      color: white;
-      text-decoration: none;
-      border-bottom: 1px dotted;
-    }
-    
-    @media (max-width: 768px) {
-      .header h1 { font-size: 1.8rem; }
-      body { padding: 10px; }
-    }
-  </style>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+        }
+        #player-container {
+            width: 100%;
+            max-width: 800px;
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 20px;
+        }
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        .footer a {
+            color: white;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
-<div class="container">
-  <div class="header">
-    <h1>🎙️ Подкаст Плеер</h1>
-    <p>С поддержкой RSS, закладок и сохранением прогресса</p>
-  </div>
-  
-  <div id="player-container"></div>
-  
-  <div class="footer">
-    <p>✨ Оффлайн-плеер | 💾 Прогресс сохраняется | 🔖 Закладки работают</p>
-    <p><a href="#" id="reset-progress" style="cursor: pointer;">Сбросить весь прогресс</a></p>
-  </div>
+<div>
+    <div class="header">
+        <h1>🎙️ Подкаст Плеер</h1>
+        <p>С поддержкой RSS, закладок и сохранением прогресса</p>
+    </div>
+    
+    <div id="player-container"></div>
+    
+    <div class="footer">
+        <p>✨ Работает оффлайн | 💾 Прогресс сохраняется | 🔖 Закладки работают</p>
+        <a id="reset-progress">🗑️ Сбросить прогресс</a>
+    </div>
 </div>
 
-<!-- Подключаем скрипты -->
+<!-- Загружаем оригинальный Shikwasa (глобальная переменная) -->
 <script src="https://cdn.jsdelivr.net/npm/shikwasa@2.2.1/dist/shikwasa.min.js"></script>
+
+<!-- Загружаем наш расширенный плеер -->
 <script type="module">
-  // Импортируем расширенный плеер
-  import { Player } from './shikwasa-enhanced.js';
-  
-  // Пример подкаста (замените на ваш RSS или локальные файлы)
-  const player = new Player({
-    container: () => document.querySelector('#player-container'),
+    import { Player } from './shikwasa-enhanced.js';
     
-    // Вариант 1: Локальные аудиофайлы (для оффлайн-демо)
-    audio: {
-      title: 'Введение в подкаст',
-      artist: 'Ваше Имя',
-      src: 'https://nasihat.tatar/audio/Сторис2.mp3',  // <- ПУТЬ К ВАШЕМУ ФАЙЛУ
-      cover: 'https://nasihat.tatar/css/images/overlay-pattern.png',   // <- ОБЛОЖКА (опционально)
-      duration: 3600  // 1 час (опционально)
-    },
+    console.log('Плеер загружен, Shikwasa доступен:', typeof window.Shikwasa);
     
-    // Вариант 2: RSS лента (если есть онлайн-подкаст)
-    rssUrl: 'https://nasihat.tatar/1.rss',
+    // Создаем плеер
+    const player = new Player({
+        container: () => document.querySelector('#player-container'),
+        
+        // Тестовое аудио (публичный тестовый файл)
+        audio: {
+            title: 'Тестовый эпизод',
+            artist: 'Подкаст',
+            src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+            duration: 120
+        },
+        
+        // Включаем функции
+        enableProgressTracking: true,
+        enableBookmarks: true,
+        socialSharing: true,
+        
+        // Настройки
+        themeColor: '#764ba2',
+        speedOptions: [0.5, 0.75, 1, 1.25, 1.5, 2],
+        download: true
+    });
     
-    // Включаем все фичи
-    enableProgressTracking: true,
-    enableBookmarks: true,
-    socialSharing: true,
-    autoNextEpisode: false,  // Для локальных файлов отключаем
+    // Сброс прогресса
+    document.getElementById('reset-progress').addEventListener('click', () => {
+        if (confirm('Сбросить весь прогресс и закладки?')) {
+            localStorage.removeItem('shikwasa_progress');
+            localStorage.removeItem('shikwasa_bookmarks');
+            alert('Сброшено! Обновите страницу.');
+            location.reload();
+        }
+    });
     
-    // Настройки плеера
-    themeColor: '#764ba2',
-    theme: 'auto',
-    speedOptions: [0.5, 0.75, 1, 1.25, 1.5, 2],
-    download: true
-  });
-  
-  // Кнопка сброса прогресса
-  document.getElementById('reset-progress').addEventListener('click', (e) => {
-    e.preventDefault();
-    if (confirm('Сбросить весь прогресс прослушивания и закладки?')) {
-      localStorage.removeItem('shikwasa_progress');
-      localStorage.removeItem('shikwasa_bookmarks');
-      alert('Прогресс сброшен! Обновите страницу.');
-      location.reload();
-    }
-  });
-  
-  // Логируем события
-  player.on('progressSaved', (progress) => {
-    console.log(`💾 Сохранен прогресс: ${Math.floor(progress.progress)}/${progress.duration} секунд`);
-  });
-  
-  player.on('bookmarkAdded', (bookmark) => {
-    console.log(`🔖 Добавлена закладка: ${bookmark.formattedTime} - ${bookmark.note}`);
-  });
-  
-  console.log('✅ Плеер загружен и готов к работе!');
+    console.log('✅ Плеер готов!');
 </script>
 </body>
 </html>
