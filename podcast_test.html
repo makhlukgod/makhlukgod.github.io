@@ -75,6 +75,8 @@
     // Создаем плеер
     const player = new Player({
         container: () => document.querySelector('#player-container'),
+
+        rssUrl: 'https://cloud.mave.digital/45361', 
         
         // Тестовое аудио (публичный тестовый файл)
         audio: {
