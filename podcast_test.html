@@ -76,15 +76,9 @@
     const player = new Player({
         container: () => document.querySelector('#player-container'),
 
-        rssUrl: './1.rss', 
+        rssUrl: './1.xml', 
         
-        // Тестовое аудио (публичный тестовый файл)
-        audio: rssUrl ? null : {
-            title: 'Тестовый эпизод',
-            artist: 'Подкаст',
-            src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
-            duration: 120
-        },
+        
         
         // Включаем функции
         enableProgressTracking: true,
