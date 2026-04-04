@@ -1,5 +1,5 @@
 // standalone-player.js
-// Исправленная версия — прогресс привязан к каждому эпизоду отдельно
+// Исправленная версия — используем guid как стабильный ID
 
 class PodcastPlayer {
   constructor(options) {
@@ -16,7 +16,6 @@ class PodcastPlayer {
     this.donationUrl = options.donationUrl || null;
     this.autoNextEpisode = options.autoNextEpisode || false;
     this.themeColor = options.themeColor || '#764ba2';
-    this.autoplay = options.autoplay || false;
     
     // Состояние
     this.episodes = [];
@@ -24,12 +23,9 @@ class PodcastPlayer {
     this.bookmarks = [];
     this.progressData = {};
     this.isPlaying = false;
+    this.currentTime = 0;
+    this.duration = 0;
     this.isRssLoaded = false;
-    this.isProgressRestored = false;
-    
-    // Флаги для предотвращения конфликтов
-    this.isSwitchingEpisode = false;
-    this.progressSaveInterval = null;
     
     // Загружаем сохранённые данные
     this.loadBookmarks();
@@ -47,16 +43,9 @@ class PodcastPlayer {
     if (this.rssUrl) {
       this.loadRSSFeed();
     } else if (options.audio) {
-      this.episodes = [{
-        id: options.audio.src,
-        title: options.audio.title,
-        audioUrl: options.audio.src,
-        cover: options.audio.cover,
-        duration: options.audio.duration
-      }];
+      this.setCurrentAudio(options.audio);
       this.isRssLoaded = true;
-      this.renderEpisodes();
-      this.loadEpisode(0);
+      this.renderBookmarks();
     }
   }
   
@@ -72,8 +61,8 @@ class PodcastPlayer {
                    style="width: 80px; height: 80px; border-radius: 12px; object-fit: cover;">
             </div>
             <div class="player-meta" style="flex: 1;">
-              <div id="player-title" style="font-weight: bold; font-size: 16px;">Загрузка...</div>
-              <div id="player-artist" style="font-size: 14px; color: #666;">Подкаст</div>
+              <div id="player-title" style="font-weight: bold; font-size: 16px;">${this.options.audio?.title || 'Загрузка...'}</div>
+              <div id="player-artist" style="font-size: 14px; color: #666;">${this.options.audio?.artist || 'Подкаст'}</div>
             </div>
           </div>
           
@@ -158,152 +147,48 @@ class PodcastPlayer {
   }
   
   attachAudioEvents() {
-    // Обновление UI во время воспроизведения
     this.audio.addEventListener('timeupdate', () => {
-      if (this.isSwitchingEpisode) return;
-      
-      const currentTime = this.audio.currentTime;
-      if (this.elements.progressBar && !this.elements.progressBar.disabled) {
-        this.elements.progressBar.value = currentTime;
-        this.elements.currentTime.textContent = this.formatTime(currentTime);
+      this.currentTime = this.audio.currentTime;
+      if (this.elements.progressBar) {
+        this.elements.progressBar.value = this.currentTime;
+        this.elements.currentTime.textContent = this.formatTime(this.currentTime);
+      }
+      if (this.enableProgressTracking) {
+        this.saveProgress();
       }
     });
     
     this.audio.addEventListener('loadedmetadata', () => {
-      if (this.isSwitchingEpisode) return;
-      
-      const duration = this.audio.duration;
+      this.duration = this.audio.duration;
       if (this.elements.progressBar) {
-        this.elements.progressBar.max = duration;
-        this.elements.durationTime.textContent = this.formatTime(duration);
+        this.elements.progressBar.max = this.duration;
+        this.elements.durationTime.textContent = this.formatTime(this.duration);
       }
-      
-      // Восстанавливаем прогресс для текущего эпизода
-      this.restoreProgressForCurrentEpisode();
     });
     
     this.audio.addEventListener('play', () => {
-      if (this.isSwitchingEpisode) return;
       this.isPlaying = true;
-      if (this.elements.playPauseBtn) {
-        this.elements.playPauseBtn.textContent = '⏸';
-      }
+      if (this.elements.playPauseBtn) this.elements.playPauseBtn.textContent = '⏸';
     });
     
     this.audio.addEventListener('pause', () => {
-      if (this.isSwitchingEpisode) return;
       this.isPlaying = false;
-      if (this.elements.playPauseBtn) {
-        this.elements.playPauseBtn.textContent = '▶';
-      }
-      // Сохраняем прогресс при паузе
-      this.saveProgressForCurrentEpisode();
+      if (this.elements.playPauseBtn) this.elements.playPauseBtn.textContent = '▶';
     });
     
     this.audio.addEventListener('ended', () => {
-      if (this.isSwitchingEpisode) return;
       this.isPlaying = false;
-      if (this.elements.playPauseBtn) {
-        this.elements.playPauseBtn.textContent = '▶';
-      }
-      this.markCurrentAsCompleted();
+      if (this.elements.playPauseBtn) this.elements.playPauseBtn.textContent = '▶';
+      this.markAsCompleted();
     });
     
     this.audio.addEventListener('error', (e) => {
       console.error('Audio error:', e);
       this.showNotification('Ошибка воспроизведения', 'Не удалось загрузить аудио');
     });
-    
-    // Интервал сохранения прогресса (каждые 5 секунд)
-    this.progressSaveInterval = setInterval(() => {
-      if (!this.isSwitchingEpisode && this.isPlaying && this.audio.currentTime > 0) {
-        this.saveProgressForCurrentEpisode();
-      }
-    }, 5000);
   }
   
-  // ==================== ПРОГРЕСС (ПРИВЯЗАН К ЭПИЗОДУ) ====================
-  
-  saveProgressForCurrentEpisode() {
-    const episode = this.episodes[this.currentEpisodeIndex];
-    if (!episode) return;
-    
-    const currentTime = this.audio.currentTime;
-    if (currentTime === 0 || isNaN(currentTime)) return;
-    
-    this.progressData[episode.id] = {
-      id: episode.id,
-      progress: currentTime,
-      duration: this.audio.duration,
-      timestamp: Date.now(),
-      completed: currentTime >= this.audio.duration - 1,
-      title: episode.title
-    };
-    
-    try {
-      localStorage.setItem('podcast_progress', JSON.stringify(this.progressData));
-      console.log(`💾 Прогресс сохранён для "${episode.title?.substring(0, 30)}": ${this.formatTime(currentTime)}`);
-    } catch(e) {
-      console.error('Ошибка сохранения прогресса:', e);
-    }
-  }
-  
-  loadProgress() {
-    try {
-      const saved = localStorage.getItem('podcast_progress');
-      if (saved) {
-        this.progressData = JSON.parse(saved);
-        console.log(`📊 Загружен прогресс для ${Object.keys(this.progressData).length} эпизодов`);
-      } else {
-        this.progressData = {};
-        console.log('📭 Нет сохранённого прогресса');
-      }
-    } catch(e) {
-      console.error('Ошибка загрузки прогресса:', e);
-      this.progressData = {};
-    }
-  }
-  
-  restoreProgressForCurrentEpisode() {
-    const episode = this.episodes[this.currentEpisodeIndex];
-    if (!episode) return;
-    
-    const saved = this.progressData[episode.id];
-    
-    if (saved && saved.progress > 5 && saved.progress < this.audio.duration - 5 && !saved.completed) {
-      console.log(`⏪ Восстановление прогресса для "${episode.title?.substring(0, 30)}": ${this.formatTime(saved.progress)}`);
-      
-      this.audio.currentTime = saved.progress;
-      this.isProgressRestored = true;
-      
-      // Обновляем UI
-      if (this.elements.progressBar) {
-        this.elements.progressBar.value = saved.progress;
-        this.elements.currentTime.textContent = this.formatTime(saved.progress);
-      }
-      
-      this.showNotification('⏪ Продолжаем с', this.formatTime(saved.progress));
-    } else if (saved && saved.progress > 0) {
-      console.log(`ℹ️ Прогресс ${this.formatTime(saved.progress)} для "${episode.title?.substring(0, 30)}" не восстановлен (слишком близко к началу/концу)`);
-    }
-  }
-  
-  markCurrentAsCompleted() {
-    const episode = this.episodes[this.currentEpisodeIndex];
-    if (episode && this.progressData[episode.id]) {
-      this.progressData[episode.id].completed = true;
-      this.progressData[episode.id].progress = this.audio.duration;
-      localStorage.setItem('podcast_progress', JSON.stringify(this.progressData));
-      this.emit('episodeCompleted', this.progressData[episode.id]);
-      this.showNotification('✅ Эпизод завершён', episode.title);
-      
-      if (this.autoNextEpisode && this.currentEpisodeIndex < this.episodes.length - 1) {
-        setTimeout(() => this.loadEpisode(this.currentEpisodeIndex + 1), 1000);
-      }
-    }
-  }
-  
-  // ==================== УПРАВЛЕНИЕ ЭПИЗОДАМИ ====================
+  // ==================== RSS ПОДДЕРЖКА (без count) ====================
   
   async loadRSSFeed() {
     if (!this.rssUrl) return;
@@ -312,10 +197,14 @@ class PodcastPlayer {
       let data;
       
       if (this.rssUrl.startsWith('http')) {
+        // Убираем &count=100 — оставляем только базовый URL
         const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(this.rssUrl)}`;
+        console.log('📡 Загрузка RSS через:', apiUrl);
         const response = await fetch(apiUrl);
         
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
         
         data = await response.json();
         
@@ -335,7 +224,7 @@ class PodcastPlayer {
       if (this.episodes.length > 0) {
         this.isRssLoaded = true;
         this.renderEpisodes();
-        this.renderBookmarks();
+        this.renderBookmarks(); // ← ВАЖНО: отображаем закладки после загрузки эпизодов
         this.emit('rssLoaded', this.episodes);
         this.showNotification(`Загружено ${this.episodes.length} эпизодов`);
         
@@ -367,9 +256,12 @@ class PodcastPlayer {
       }
       
       if (audioUrl) {
+        // ИСПОЛЬЗУЕМ guid КАК ID (или ссылку, если guid нет)
         const episodeId = item.guid || audioUrl;
+        console.log(`📌 Эпизод ${index}: ID = ${episodeId.substring(0, 50)}...`);
+        
         episodes.push({
-          id: episodeId,
+          id: episodeId,  // ← теперь ID = guid
           title: item.title,
           description: item.description,
           pubDate: item.pubDate,
@@ -393,6 +285,7 @@ class PodcastPlayer {
       const audioUrl = enclosure?.getAttribute('url');
       
       if (audioUrl) {
+        // Берем guid из XML
         const guidElement = item.querySelector('guid');
         const episodeId = guidElement?.textContent || audioUrl;
         
@@ -433,13 +326,7 @@ class PodcastPlayer {
       return;
     }
     
-    container.innerHTML = this.episodes.map((ep, idx) => {
-      const savedProgress = this.progressData[ep.id];
-      const progressText = savedProgress && savedProgress.progress > 0 && !savedProgress.completed 
-        ? ` • ⏺ ${Math.floor(savedProgress.progress / 60)}:${Math.floor(savedProgress.progress % 60).toString().padStart(2, '0')}` 
-        : '';
-      
-      return `
+    container.innerHTML = this.episodes.map((ep, idx) => `
       <div class="episode-item" data-index="${idx}" style="
         padding: 12px;
         margin-bottom: 8px;
@@ -452,7 +339,6 @@ class PodcastPlayer {
         <div style="font-size: 11px; color: #666;">
           ${ep.pubDate ? new Date(ep.pubDate).toLocaleDateString() : ''}
           ${ep.duration ? ` • ${this.formatTime(ep.duration)}` : ''}
-          ${progressText}
         </div>
         <button class="episode-play-btn" data-index="${idx}" style="
           margin-top: 8px;
@@ -465,7 +351,7 @@ class PodcastPlayer {
           font-size: 12px;
         ">▶ Воспроизвести</button>
       </div>
-    `}).join('');
+    `).join('');
     
     container.querySelectorAll('.episode-play-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
@@ -487,111 +373,61 @@ class PodcastPlayer {
   
   loadEpisode(index) {
     if (index < 0 || index >= this.episodes.length) return;
-    if (index === this.currentEpisodeIndex && this.audio.src) return;
     
     const episode = this.episodes[index];
-    
-    // Сохраняем прогресс текущего эпизода перед переключением
-    if (this.audio.src && this.audio.currentTime > 0) {
-      this.saveProgressForCurrentEpisode();
-    }
-    
-    // Останавливаем текущее воспроизведение
-    this.audio.pause();
-    this.isPlaying = false;
-    if (this.elements.playPauseBtn) {
-      this.elements.playPauseBtn.textContent = '▶';
-    }
-    
-    // Устанавливаем флаг переключения
-    this.isSwitchingEpisode = true;
     this.currentEpisodeIndex = index;
-    this.isProgressRestored = false;
     
-    // Отключаем прогресс-бар на время загрузки
-    if (this.elements.progressBar) {
-      this.elements.progressBar.disabled = true;
-      this.elements.progressBar.value = 0;
-      this.elements.currentTime.textContent = '0:00';
-      this.elements.durationTime.textContent = '0:00';
+    this.setCurrentAudio({
+      title: episode.title,
+      artist: 'Подкаст',
+      src: episode.audioUrl,
+      cover: episode.cover
+    });
+    
+    this.renderEpisodes();
+    this.renderBookmarks(); // ← обновляем закладки при смене эпизода
+    
+    this.emit('episodeChange', episode);
+    this.play();
+    
+    if (this.progressData[episode.id] && this.progressData[episode.id].progress > 0) {
+      setTimeout(() => {
+        this.seek(this.progressData[episode.id].progress);
+      }, 500);
     }
-    
-    // Обновляем UI
-    if (this.elements.title) {
-      this.elements.title.textContent = episode.title;
-    }
-    if (this.elements.cover && episode.cover) {
-      this.elements.cover.src = episode.cover;
-    }
-    
-    // Загружаем новое аудио
-    this.audio.src = episode.audioUrl;
-    this.audio.load();
-    
-    // Ждём загрузки метаданных
-    const onLoaded = () => {
-      this.audio.removeEventListener('loadedmetadata', onLoaded);
-      this.isSwitchingEpisode = false;
-      
-      if (this.elements.progressBar) {
-        this.elements.progressBar.disabled = false;
-      }
-      
-      this.renderEpisodes();
-      this.renderBookmarks();
-      this.emit('episodeChange', episode);
-      
-      // Автовоспроизведение, если включено
-      if (this.autoplay) {
-        setTimeout(() => this.play(), 100);
-      }
-    };
-    
-    this.audio.addEventListener('loadedmetadata', onLoaded, { once: true });
-    
-    // Таймаут на случай ошибки загрузки
-    setTimeout(() => {
-      if (this.isSwitchingEpisode) {
-        this.isSwitchingEpisode = false;
-        if (this.elements.progressBar) {
-          this.elements.progressBar.disabled = false;
-        }
-      }
-    }, 5000);
   }
   
-  // ==================== УПРАВЛЕНИЕ ВОСПРОИЗВЕДЕНИЕМ ====================
+  setCurrentAudio(audio) {
+    if (!audio || !audio.src) return;
+    
+    this.audio.src = audio.src;
+    this.audio.load();
+    
+    if (this.elements.title) this.elements.title.textContent = audio.title || 'Нет названия';
+    if (this.elements.artist) this.elements.artist.textContent = audio.artist || 'Подкаст';
+    if (this.elements.cover && audio.cover) this.elements.cover.src = audio.cover;
+    
+    this.options.audio = audio;
+  }
+  
+  // ==================== УПРАВЛЕНИЕ ====================
   
   play() {
-    if (this.isSwitchingEpisode) {
-      console.log('Ожидание загрузки эпизода...');
-      return Promise.reject('Switching episode');
-    }
-    
     return this.audio.play().catch(err => {
       console.warn('Play failed:', err);
-      if (err.name === 'NotAllowedError') {
-        this.showNotification('🔊 Нажмите Play', 'Автовоспроизведение заблокировано браузером');
-      }
+      this.showNotification('Автовоспроизведение заблокировано', 'Нажмите play вручную');
     });
   }
   
-  pause() {
-    if (this.isSwitchingEpisode) return;
-    this.audio.pause();
-  }
+  pause() { this.audio.pause(); }
   
   togglePlay() {
-    if (this.isPlaying) {
-      this.pause();
-    } else {
-      this.play();
-    }
+    if (this.isPlaying) this.pause();
+    else this.play();
   }
   
   seek(time) {
-    if (this.isSwitchingEpisode) return;
-    if (!isNaN(time) && time >= 0 && time <= this.audio.duration) {
+    if (!isNaN(time) && time >= 0 && time <= this.duration) {
       this.audio.currentTime = time;
     }
   }
@@ -600,11 +436,51 @@ class PodcastPlayer {
   forward(seconds) { this.seek(this.audio.currentTime + seconds); }
   setSpeed(speed) { this.audio.playbackRate = speed; }
   
+  // ==================== ПРОГРЕСС ====================
+  
+  saveProgress() {
+    const audioId = this.episodes[this.currentEpisodeIndex]?.id;
+    if (!audioId) return;
+    
+    this.progressData[audioId] = {
+      id: audioId,
+      progress: this.audio.currentTime,
+      duration: this.audio.duration,
+      timestamp: Date.now(),
+      completed: this.audio.currentTime >= this.audio.duration - 1,
+      title: this.options.audio?.title
+    };
+    
+    try {
+      localStorage.setItem('podcast_progress', JSON.stringify(this.progressData));
+    } catch(e) {}
+  }
+  
+  loadProgress() {
+    try {
+      const saved = localStorage.getItem('podcast_progress');
+      if (saved) this.progressData = JSON.parse(saved);
+    } catch(e) { this.progressData = {}; }
+  }
+  
+  markAsCompleted() {
+    const audioId = this.episodes[this.currentEpisodeIndex]?.id;
+    if (audioId && this.progressData[audioId]) {
+      this.progressData[audioId].completed = true;
+      localStorage.setItem('podcast_progress', JSON.stringify(this.progressData));
+      this.emit('episodeCompleted', this.progressData[audioId]);
+      
+      if (this.autoNextEpisode && this.currentEpisodeIndex < this.episodes.length - 1) {
+        setTimeout(() => this.loadEpisode(this.currentEpisodeIndex + 1), 1000);
+      }
+    }
+  }
+  
   // ==================== ЗАКЛАДКИ ====================
   
   addBookmark(note = '') {
-    const currentEpisode = this.episodes[this.currentEpisodeIndex];
-    if (!currentEpisode) {
+    const currentAudio = this.episodes[this.currentEpisodeIndex];
+    if (!currentAudio) {
       this.showNotification('Ошибка', 'Нет активного эпизода');
       return;
     }
@@ -620,8 +496,8 @@ class PodcastPlayer {
     
     const bookmark = {
       id: `bm_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      episodeId: currentEpisode.id,
-      episodeTitle: currentEpisode.title,
+      episodeId: currentAudio.id,  // ← теперь это guid эпизода
+      episodeTitle: currentAudio.title,
       time: currentTime,
       formattedTime: formattedTime,
       note: bookmarkNote,
@@ -634,6 +510,8 @@ class PodcastPlayer {
     
     this.showNotification('🔖 Закладка добавлена', `${bookmark.note} - ${formattedTime}`);
     this.emit('bookmarkAdded', bookmark);
+    
+    console.log(`📌 Добавлена закладка. EpisodeId: ${bookmark.episodeId.substring(0, 40)}... Всего: ${this.bookmarks.length}`);
   }
   
   saveBookmarks() {
@@ -650,9 +528,13 @@ class PodcastPlayer {
       const saved = localStorage.getItem('podcast_bookmarks');
       if (saved) {
         this.bookmarks = JSON.parse(saved);
-        console.log(`📖 Загружено ${this.bookmarks.length} закладок`);
+        console.log(`📖 Загружено ${this.bookmarks.length} закладок из localStorage`);
+        if (this.bookmarks.length > 0) {
+          console.log('   Пример ID эпизода в закладке:', this.bookmarks[0].episodeId?.substring(0, 50));
+        }
       } else {
         this.bookmarks = [];
+        console.log('📭 Нет сохранённых закладок');
       }
     } catch(e) {
       console.error('Ошибка загрузки закладок:', e);
@@ -680,15 +562,21 @@ class PodcastPlayer {
     }
     
     if (!this.isRssLoaded && this.episodes.length === 0) {
-      container.innerHTML = '<div style="text-align: center; padding: 20px; color: #999;">⏳ Загрузка...</div>';
+      container.innerHTML = '<div style="text-align: center; padding: 20px; color: #999;">⏳ Загрузка подкаста...</div>';
       return;
     }
     
     const currentEpisodeId = this.episodes[this.currentEpisodeIndex]?.id;
+    
+    console.log(`🔍 Поиск закладок для эпизода с ID: ${currentEpisodeId?.substring(0, 50)}...`);
+    console.log(`   Всего закладок: ${this.bookmarks.length}`);
+    
     const currentBookmarks = this.bookmarks.filter(b => b.episodeId === currentEpisodeId);
     
+    console.log(`   Найдено закладок: ${currentBookmarks.length}`);
+    
     if (currentBookmarks.length === 0) {
-      container.innerHTML = '<div style="text-align: center; padding: 20px; color: #999;">📭 Нет закладок</div>';
+      container.innerHTML = '<div style="text-align: center; padding: 20px; color: #999;">📭 Нет закладок для этого эпизода</div>';
       return;
     }
     
@@ -697,11 +585,11 @@ class PodcastPlayer {
     container.innerHTML = currentBookmarks.map(b => `
       <div style="padding: 10px; margin-bottom: 8px; background: #f5f5f5; border-radius: 8px; border-left: 3px solid ${this.themeColor};">
         <div style="font-weight: bold; color: ${this.themeColor};">⏱️ ${b.formattedTime}</div>
-        <div style="font-size: 13px; margin: 5px 0;">${this.escapeHtml(b.note)}</div>
+        <div style="font-size: 13px; margin: 5px 0; font-weight: 500;">${this.escapeHtml(b.note)}</div>
         <div style="font-size: 11px; color: #999; margin-bottom: 8px;">${new Date(b.timestamp).toLocaleString()}</div>
         <div style="display: flex; gap: 8px;">
           <button class="goto-bookmark" data-time="${b.time}" style="padding: 5px 12px; background: ${this.themeColor}; color: white; border: none; border-radius: 5px; cursor: pointer;">▶ Перейти</button>
-          <button class="delete-bookmark" data-id="${b.id}" style="padding: 5px 12px; background: #f44336; color: white; border: none; border-radius: 5px; cursor: pointer;">🗑️</button>
+          <button class="delete-bookmark" data-id="${b.id}" style="padding: 5px 12px; background: #f44336; color: white; border: none; border-radius: 5px; cursor: pointer;">🗑️ Удалить</button>
         </div>
       </div>
     `).join('');
@@ -718,26 +606,24 @@ class PodcastPlayer {
     });
   }
   
-  // ==================== ИНТЕГРАЦИИ ====================
+  // ==================== ВСПОМОГАТЕЛЬНЫЕ ====================
   
   shareEpisode() {
     const episode = this.episodes[this.currentEpisodeIndex];
     if (!episode) return;
     
-    const text = `Слушаю: ${episode.title}`;
+    const text = `Слушаю: ${episode.title} на ${this.formatTime(this.audio.currentTime)}`;
     if (navigator.share) {
       navigator.share({ title: episode.title, text: text, url: window.location.href });
     } else {
       navigator.clipboard.writeText(text);
-      this.showNotification('📋 Скопировано', text);
+      this.showNotification('📋 Ссылка скопирована', text);
     }
   }
   
   showDonation() {
     if (this.donationUrl) window.open(this.donationUrl, '_blank');
   }
-  
-  // ==================== ВСПОМОГАТЕЛЬНЫЕ ====================
   
   formatTime(seconds) {
     if (isNaN(seconds) || seconds === 0) return '0:00';
@@ -780,10 +666,6 @@ class PodcastPlayer {
   }
   
   destroy() {
-    if (this.progressSaveInterval) {
-      clearInterval(this.progressSaveInterval);
-    }
-    this.saveProgressForCurrentEpisode();
     this.audio.pause();
     this.audio.src = '';
     if (this.container) this.container.innerHTML = '';
