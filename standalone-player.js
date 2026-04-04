@@ -1,5 +1,5 @@
 // standalone-player.js
-// Полностью автономный подкаст-плеер с правильной загрузкой закладок
+// Исправленная версия — закладки используют audioUrl как ID
 
 class PodcastPlayer {
   constructor(options) {
@@ -35,7 +35,7 @@ class PodcastPlayer {
     this.audio = new Audio();
     this.audio.preload = 'metadata';
     
-    // Создаём UI (пустой, без данных)
+    // Создаём UI
     this.initUI();
     this.attachAudioEvents();
     
@@ -45,7 +45,6 @@ class PodcastPlayer {
     } else if (options.audio) {
       this.setCurrentAudio(options.audio);
       this.isRssLoaded = true;
-      // Если нет RSS, всё равно показываем закладки
       this.renderBookmarks();
     }
   }
@@ -208,7 +207,7 @@ class PodcastPlayer {
       let data;
       
       if (this.rssUrl.startsWith('http')) {
-        const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(this.rssUrl)}`;
+        const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(this.rssUrl)}&count=100`;
         const response = await fetch(apiUrl);
         data = await response.json();
         
@@ -263,7 +262,8 @@ class PodcastPlayer {
       
       if (audioUrl) {
         episodes.push({
-          id: `ep_${index}_${Date.now()}`,
+          // ИСПРАВЛЕНО: используем audioUrl как стабильный ID
+          id: audioUrl,
           title: item.title,
           description: item.description,
           pubDate: item.pubDate,
@@ -287,7 +287,8 @@ class PodcastPlayer {
       
       if (audioUrl) {
         episodes.push({
-          id: `ep_${index}_${Date.now()}`,
+          // ИСПРАВЛЕНО: используем audioUrl как стабильный ID
+          id: audioUrl,
           title: item.querySelector('title')?.textContent || 'Untitled',
           description: item.querySelector('description')?.textContent || '',
           pubDate: item.querySelector('pubDate')?.textContent || '',
@@ -520,7 +521,7 @@ class PodcastPlayer {
     
     const bookmark = {
       id: `bm_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      episodeId: currentAudio.id,
+      episodeId: currentAudio.id,  // Теперь это audioUrl, стабильный ID
       episodeTitle: currentAudio.title,
       time: currentTime,
       formattedTime: formattedTime,
@@ -536,6 +537,7 @@ class PodcastPlayer {
     this.emit('bookmarkAdded', bookmark);
     
     console.log(`📌 Закладка добавлена. Всего: ${this.bookmarks.length}`);
+    console.log(`   episodeId: ${bookmark.episodeId}`);
   }
   
   saveBookmarks() {
@@ -553,6 +555,10 @@ class PodcastPlayer {
       if (saved) {
         this.bookmarks = JSON.parse(saved);
         console.log(`📖 Загружено ${this.bookmarks.length} закладок из localStorage`);
+        // Выводим первые 3 для отладки
+        if (this.bookmarks.length > 0) {
+          console.log('   Пример закладки:', this.bookmarks[0]);
+        }
       } else {
         this.bookmarks = [];
         console.log('📭 Нет сохранённых закладок');
@@ -594,10 +600,13 @@ class PodcastPlayer {
     
     const currentEpisodeId = this.episodes[this.currentEpisodeIndex]?.id;
     
+    console.log(`🔍 Поиск закладок для episodeId: ${currentEpisodeId}`);
+    console.log(`   Всего закладок в хранилище: ${this.bookmarks.length}`);
+    
     // Фильтруем закладки для текущего эпизода
     const currentBookmarks = this.bookmarks.filter(b => b.episodeId === currentEpisodeId);
     
-    console.log(`📌 Рендеринг: ${currentBookmarks.length} закладок для текущего эпизода (всего: ${this.bookmarks.length})`);
+    console.log(`   Найдено закладок для этого эпизода: ${currentBookmarks.length}`);
     
     if (currentBookmarks.length === 0) {
       container.innerHTML = '<div style="text-align: center; padding: 20px; color: #999;">📭 Нет закладок для этого эпизода</div>';
