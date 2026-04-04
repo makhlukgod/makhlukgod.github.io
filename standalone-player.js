@@ -207,7 +207,7 @@ class PodcastPlayer {
       let data;
       
       if (this.rssUrl.startsWith('http')) {
-        const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(this.rssUrl)}&count=100`;
+        const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(this.rssUrl)}`;
         const response = await fetch(apiUrl);
         data = await response.json();
         
