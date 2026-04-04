@@ -1,11 +1,11 @@
 {
-  "name": "НӘСЫЙХӘТ .tatar",
-  "short_name": "татарча дини дәресләр",
+  "name": "Татарча дини дәресләр",
+  "short_name": "Нәсыйхәт",
   "description": "НӘСЫЙХӘТ | татарча дини дәресләр",
   "start_url": "/podcast1/",
   "display": "standalone",
-  "theme_color": "#764ba2",
-  "background_color": "#764ba2",
+  "theme_color": "#fff",
+  "background_color": "#fff",
   "orientation": "portrait",
   "icons": [
     {
