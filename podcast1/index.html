@@ -13,22 +13,30 @@
     
     <!-- Цвет темы для браузера -->
     <meta name="theme-color" content="#764ba2">
+    
+    <!-- ВАЖНО: используем правильный meta-тег для iOS -->
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
-    <!-- Остальные стили -->
     <style>
-         @keyframes fadeInOut {
+        @keyframes fadeInOut {
             0% { opacity: 0; transform: translateY(20px); }
             15% { opacity: 1; transform: translateY(0); }
             85% { opacity: 1; transform: translateY(0); }
             100% { opacity: 0; transform: translateY(20px); }
         }
         
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
             margin: 0;
             padding: 20px;
-            font-family: system-ui, sans-serif;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
         }
@@ -45,6 +53,7 @@
             margin-bottom: 20px;
             text-align: center;
             color: #666;
+            font-size: 14px;
         }
         
         #player-container {
@@ -64,45 +73,82 @@
             padding: 8px 16px;
             border-radius: 20px;
             cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .footer button:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        /* Стили для скролла */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #764ba2;
+            border-radius: 10px;
         }
     </style>
 </head>
 <body>
-    <!-- ваш HTML -->
+<div class="container">
+    <div class="info">
+        🎧 Прогресс сохраняется автоматически | 🔖 Закладки работают после перезагрузки | 📱 Можно установить на телефон
+    </div>
     
-    <script type="module">
-        import { Player } from './simple-player.js';
-        
-        const RSS_URL = 'https://cloud.mave.digital/45361';
-        
+    <div id="player-container"></div>
+    
+    <div class="footer">
+        <button id="reset-data">🗑️ Сбросить все данные</button>
+    </div>
+</div>
+
+<script type="module">
+    import { SimplePodcastPlayer as Player } from './simple-player.js';
+    
+    // ============================================
+    // 🔥 ВСТАВЬТЕ ВАШУ RSS ССЫЛКУ
+    // ============================================
+    const RSS_URL = 'https://cloud.mave.digital/45361';
+    // ============================================
+    
+    // Создаём плеер после загрузки DOM
+    document.addEventListener('DOMContentLoaded', () => {
         window.player = new Player({
             container: () => document.getElementById('player-container'),
             rssUrl: RSS_URL,
             themeColor: '#764ba2'
         });
-        
-        // РЕГИСТРАЦИЯ SERVICE WORKER (ДОБАВИТЬ ЭТУ ФУНКЦИЮ)
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(registration => {
-                        console.log('✅ Service Worker зарегистрирован:', registration);
-                    })
-                    .catch(error => {
-                        console.error('❌ Ошибка регистрации Service Worker:', error);
-                    });
-            });
+    });
+    
+    // Кнопка сброса данных
+    document.getElementById('reset-data').onclick = () => {
+        if (confirm('Сбросить весь прогресс и все закладки?\n\nЭто действие нельзя отменить.')) {
+            localStorage.removeItem('podcast_progress');
+            localStorage.removeItem('podcast_bookmarks');
+            alert('✅ Данные сброшены. Обновите страницу.');
+            location.reload();
         }
-        
-        // Кнопка сброса данных
-        document.getElementById('reset-data').onclick = () => {
-            if (confirm('Сбросить весь прогресс и все закладки?')) {
-                localStorage.removeItem('podcast_progress');
-                localStorage.removeItem('podcast_bookmarks');
-                alert('Данные сброшены. Обновите страницу.');
-                location.reload();
-            }
-        };
-    </script>
+    };
+    
+    // Регистрация Service Worker (PWA)
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js')
+                .then(registration => {
+                    console.log('✅ Service Worker зарегистрирован:', registration.scope);
+                })
+                .catch(error => {
+                    console.error('❌ Ошибка регистрации Service Worker:', error);
+                });
+        });
+    }
+</script>
 </body>
 </html>
