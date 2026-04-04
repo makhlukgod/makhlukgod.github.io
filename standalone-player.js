@@ -25,6 +25,7 @@ class PodcastPlayer {
     this.isPlaying = false;
     this.currentTime = 0;
     this.duration = 0;
+    this.isInitialized = false;
     
     // Загружаем сохранённые данные
     this.loadBookmarks();
@@ -109,7 +110,7 @@ class PodcastPlayer {
           </div>
           ${this.enableBookmarks ? `
           <div id="bookmarks-panel" style="background: white; border-radius: 12px; padding: 15px; max-height: 300px; overflow-y: auto;">
-            <h4 style="margin-bottom: 10px;">📌 Закладки</h4>
+            <h4 style="margin-bottom: 10px;">📌 Закладки (всего: <span id="bookmarks-count">0</span>)</h4>
             <div id="bookmarks-list"></div>
           </div>
           ` : ''}
@@ -133,6 +134,7 @@ class PodcastPlayer {
     
     if (this.enableBookmarks) {
       this.elements.bookmarkBtn = document.getElementById('bookmark-btn');
+      this.elements.bookmarksCount = document.getElementById('bookmarks-count');
       this.elements.bookmarkBtn?.addEventListener('click', () => this.addBookmark());
     }
     
@@ -229,6 +231,8 @@ class PodcastPlayer {
       
       if (this.episodes.length > 0) {
         this.renderEpisodes();
+        // ПОСЛЕ ЗАГРУЗКИ ЭПИЗОДОВ ОБНОВЛЯЕМ ЗАКЛАДКИ
+        this.renderBookmarks();
         this.emit('rssLoaded', this.episodes);
         this.showNotification(`Загружено ${this.episodes.length} эпизодов`);
       }
@@ -368,7 +372,7 @@ class PodcastPlayer {
     });
     
     this.renderEpisodes(); // Обновляем активный эпизод
-    this.renderBookmarks(); // Обновляем закладки для нового эпизода
+    this.renderBookmarks(); // ОБНОВЛЯЕМ ЗАКЛАДКИ ДЛЯ НОВОГО ЭПИЗОДА
     
     this.emit('episodeChange', episode);
     this.play();
@@ -464,6 +468,7 @@ class PodcastPlayer {
       const saved = localStorage.getItem('podcast_progress');
       if (saved) {
         this.progressData = JSON.parse(saved);
+        console.log(`📊 Загружен прогресс для ${Object.keys(this.progressData).length} эпизодов`);
       }
     } catch(e) {
       this.progressData = {};
@@ -483,7 +488,7 @@ class PodcastPlayer {
     }
   }
   
-  // ==================== ЗАКЛАДКИ (исправлено сохранение множества) ====================
+  // ==================== ЗАКЛАДКИ (ИСПРАВЛЕНО) ====================
   
   addBookmark(note = '') {
     const currentAudio = this.episodes[this.currentEpisodeIndex];
@@ -495,6 +500,13 @@ class PodcastPlayer {
     const currentTime = this.audio.currentTime;
     const formattedTime = this.formatTime(currentTime);
     
+    // Диалог для ввода названия закладки
+    let bookmarkNote = note;
+    if (!bookmarkNote) {
+      bookmarkNote = prompt('Введите название закладки:', `Отметка ${formattedTime}`);
+      if (!bookmarkNote) return; // Пользователь отменил
+    }
+    
     // Создаём новую закладку
     const bookmark = {
       id: `bm_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -502,7 +514,7 @@ class PodcastPlayer {
       episodeTitle: currentAudio.title,
       time: currentTime,
       formattedTime: formattedTime,
-      note: note || prompt('Введите название закладки:', `Отметка ${formattedTime}`) || `Отметка в ${formattedTime}`,
+      note: bookmarkNote,
       timestamp: Date.now()
     };
     
@@ -519,13 +531,13 @@ class PodcastPlayer {
     this.showNotification('🔖 Закладка добавлена', `${bookmark.note} - ${formattedTime}`);
     this.emit('bookmarkAdded', bookmark);
     
-    console.log(`Закладка добавлена. Всего закладок: ${this.bookmarks.length}`);
+    console.log(`📌 Закладка добавлена. Всего закладок: ${this.bookmarks.length}`);
   }
   
   saveBookmarks() {
     try {
       localStorage.setItem('podcast_bookmarks', JSON.stringify(this.bookmarks));
-      console.log(`Сохранено ${this.bookmarks.length} закладок`);
+      console.log(`💾 Сохранено ${this.bookmarks.length} закладок в localStorage`);
     } catch(e) {
       console.error('Ошибка сохранения закладок:', e);
     }
@@ -536,10 +548,14 @@ class PodcastPlayer {
       const saved = localStorage.getItem('podcast_bookmarks');
       if (saved) {
         this.bookmarks = JSON.parse(saved);
-        console.log(`Загружено ${this.bookmarks.length} закладок`);
+        console.log(`📖 Загружено ${this.bookmarks.length} закладок из localStorage`);
+        // Выводим список загруженных закладок для отладки
+        if (this.bookmarks.length > 0) {
+          console.log('Список загруженных закладок:', this.bookmarks);
+        }
       } else {
         this.bookmarks = [];
-        console.log('Нет сохранённых закладок');
+        console.log('📭 Нет сохранённых закладок');
       }
     } catch(e) {
       console.error('Ошибка загрузки закладок:', e);
@@ -561,15 +577,25 @@ class PodcastPlayer {
   
   renderBookmarks() {
     const container = document.getElementById('bookmarks-list');
-    if (!container) return;
+    if (!container) {
+      console.warn('Контейнер bookmarks-list не найден');
+      return;
+    }
     
     const currentEpisodeId = this.episodes[this.currentEpisodeIndex]?.id;
     
     // Фильтруем закладки для текущего эпизода
     const currentBookmarks = this.bookmarks.filter(b => b.episodeId === currentEpisodeId);
     
+    console.log(`📌 Рендеринг закладок: найдено ${currentBookmarks.length} для текущего эпизода (всего в хранилище: ${this.bookmarks.length})`);
+    
+    // Обновляем счётчик
+    if (this.elements.bookmarksCount) {
+      this.elements.bookmarksCount.textContent = this.bookmarks.length;
+    }
+    
     if (currentBookmarks.length === 0) {
-      container.innerHTML = '<div style="color: #999; text-align: center; padding: 20px;">📭 Нет закладок</div>';
+      container.innerHTML = '<div style="color: #999; text-align: center; padding: 20px;">📭 Нет закладок для этого эпизода</div>';
       return;
     }
     
