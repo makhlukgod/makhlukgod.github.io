@@ -6,10 +6,10 @@
     <title>🎙️ Подкаст Плеер</title>
     
     <!-- PWA манифест -->
-    <link rel="manifest" href="/manifest.json">
+    <link rel="manifest" href="manifest.json">
     
     <!-- Иконки для iOS (Safari) -->
-    <link rel="apple-touch-icon" href="/icons/icon-152.png">
+    <link rel="apple-touch-icon" href="icons/icon-152.png">
     
     <!-- Цвет темы для браузера -->
     <meta name="theme-color" content="#764ba2">
@@ -84,7 +84,7 @@
         // РЕГИСТРАЦИЯ SERVICE WORKER (ДОБАВИТЬ ЭТУ ФУНКЦИЮ)
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
+                navigator.serviceWorker.register('sw.js')
                     .then(registration => {
                         console.log('✅ Service Worker зарегистрирован:', registration);
                     })
