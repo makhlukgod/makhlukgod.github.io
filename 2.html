@@ -29,49 +29,22 @@
             margin: 0 auto;
         }
         
-        .rss-card {
+        .info-card {
             background: white;
             border-radius: 20px;
             padding: 20px;
             margin-bottom: 20px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
         }
         
-        .rss-input-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
-        
-        .rss-input-group input {
-            flex: 1;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            font-size: 14px;
-        }
-        
-        .rss-input-group button {
-            padding: 12px 24px;
-            background: #764ba2;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: 600;
-        }
-        
-        .examples {
-            margin-top: 10px;
-            font-size: 12px;
-            color: #666;
-        }
-        
-        .examples a {
+        .info-card h3 {
             color: #764ba2;
-            cursor: pointer;
-            text-decoration: underline;
-            margin: 0 5px;
+            margin-bottom: 10px;
+        }
+        
+        .info-card p {
+            color: #666;
         }
         
         .footer {
@@ -89,47 +62,51 @@
         #player-container {
             margin-top: 20px;
         }
+        
+        button {
+            transition: transform 0.1s ease;
+        }
+        
+        button:active {
+            transform: scale(0.95);
+        }
     </style>
 </head>
 <body>
 <div class="container">
-    <div class="rss-card">
-        <h3>📡 Подкаст плеер</h3>
-        <p style="color: #666; margin-bottom: 10px;">Введите RSS ссылку вашего подкаста или выберите из примеров</p>
-        <div class="rss-input-group">
-            <input type="text" id="rss-url" placeholder="https://example.com/podcast.rss">
-            <button id="load-rss">📥 Загрузить</button>
-        </div>
-        <div class="examples">
-            🔥 Примеры для теста:
-            <a data-rss="https://feeds.megaphone.fm/ESP1614110167">The Daily (NYT)</a> |
-            <a data-rss="https://feeds.simplecast.com/54nAGcIl">How I Built This</a> |
-            <a data-rss="https://rss.art19.com/lexicon-valley">Lexicon Valley</a>
-        </div>
+    <div class="info-card">
+        <h3>🎙️ Подкаст Плеер</h3>
+        <p>Прогресс прослушивания сохраняется • Можно добавлять закладки • Все данные хранятся в браузере</p>
     </div>
     
     <div id="player-container"></div>
     
     <div class="footer">
-        <a id="reset-progress">🗑️ Сбросить весь прогресс</a>
+        <a id="reset-progress">🗑️ Сбросить весь прогресс и закладки</a>
     </div>
 </div>
 
 <script type="module">
     import { Player } from './standalone-player.js';
     
+    // ============================================
+    // 🔥 ЗДЕСЬ ВСТАВЬТЕ ВАШУ RSS ССЫЛКУ
+    // ============================================
+    const YOUR_RSS_URL = 'https://feeds.megaphone.fm/ESP1614110167';
+    // ============================================
+    
     let currentPlayer = null;
     
-    function createPlayer(rssUrl = null) {
+    function createPlayer() {
         if (currentPlayer) {
             currentPlayer.destroy();
         }
         
         currentPlayer = new Player({
             container: () => document.getElementById('player-container'),
-            rssUrl: rssUrl,
-            audio: rssUrl ? null : {
-                title: 'Введите RSS подкаста выше',
+            rssUrl: YOUR_RSS_URL,  // RSS берётся из переменной выше
+            audio: {
+                title: 'Загрузка подкаста...',
                 artist: 'Подкаст',
                 src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
                 cover: 'https://via.placeholder.com/80?text=🎙️'
@@ -146,7 +123,11 @@
         });
         
         currentPlayer.on('rssError', (error) => {
-            console.error('RSS error:', error);
+            console.error('Ошибка загрузки RSS:', error);
+        });
+        
+        currentPlayer.on('bookmarkAdded', (bookmark) => {
+            console.log(`📌 Добавлена закладка: ${bookmark.note} (${bookmark.formattedTime})`);
         });
         
         return currentPlayer;
@@ -154,28 +135,12 @@
     
     createPlayer();
     
-    document.getElementById('load-rss').addEventListener('click', () => {
-        const url = document.getElementById('rss-url').value.trim();
-        if (url) {
-            createPlayer(url);
-        } else {
-            alert('Введите RSS ссылку');
-        }
-    });
-    
-    document.querySelectorAll('[data-rss]').forEach(link => {
-        link.addEventListener('click', () => {
-            const url = link.getAttribute('data-rss');
-            document.getElementById('rss-url').value = url;
-            createPlayer(url);
-        });
-    });
-    
+    // Сброс прогресса и закладок
     document.getElementById('reset-progress').addEventListener('click', () => {
-        if (confirm('Сбросить весь прогресс прослушивания и закладки?')) {
+        if (confirm('Сбросить весь прогресс прослушивания и все закладки?\n\nЭто действие нельзя отменить.')) {
             localStorage.removeItem('podcast_progress');
             localStorage.removeItem('podcast_bookmarks');
-            alert('Сброшено! Обновите страницу.');
+            alert('✅ Все данные сброшены! Страница будет обновлена.');
             location.reload();
         }
     });
