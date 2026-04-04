@@ -1,5 +1,5 @@
 // standalone-player.js
-// Полностью автономный подкаст-плеер (без зависимостей)
+// Полностью автономный подкаст-плеер с сохранением множества закладок
 
 class PodcastPlayer {
   constructor(options) {
@@ -20,11 +20,15 @@ class PodcastPlayer {
     // Состояние
     this.episodes = [];
     this.currentEpisodeIndex = 0;
-    this.bookmarks = this.loadBookmarks();
-    this.progressData = this.loadProgress();
+    this.bookmarks = []; // Будет загружено из localStorage
+    this.progressData = {};
     this.isPlaying = false;
     this.currentTime = 0;
     this.duration = 0;
+    
+    // Загружаем сохранённые данные
+    this.loadBookmarks();
+    this.loadProgress();
     
     // Создаем аудио элемент
     this.audio = new Audio();
@@ -248,7 +252,7 @@ class PodcastPlayer {
       
       if (audioUrl) {
         episodes.push({
-          id: `ep_${index}`,
+          id: `ep_${index}_${Date.now()}`,
           title: item.title,
           description: item.description,
           pubDate: item.pubDate,
@@ -272,7 +276,7 @@ class PodcastPlayer {
       
       if (audioUrl) {
         episodes.push({
-          id: `ep_${index}`,
+          id: `ep_${index}_${Date.now()}`,
           title: item.querySelector('title')?.textContent || 'Untitled',
           description: item.querySelector('description')?.textContent || '',
           pubDate: item.querySelector('pubDate')?.textContent || '',
@@ -364,6 +368,7 @@ class PodcastPlayer {
     });
     
     this.renderEpisodes(); // Обновляем активный эпизод
+    this.renderBookmarks(); // Обновляем закладки для нового эпизода
     
     this.emit('episodeChange', episode);
     this.play();
@@ -457,9 +462,11 @@ class PodcastPlayer {
   loadProgress() {
     try {
       const saved = localStorage.getItem('podcast_progress');
-      return saved ? JSON.parse(saved) : {};
+      if (saved) {
+        this.progressData = JSON.parse(saved);
+      }
     } catch(e) {
-      return {};
+      this.progressData = {};
     }
   }
   
@@ -476,48 +483,80 @@ class PodcastPlayer {
     }
   }
   
-  // ==================== ЗАКЛАДКИ ====================
+  // ==================== ЗАКЛАДКИ (исправлено сохранение множества) ====================
   
   addBookmark(note = '') {
     const currentAudio = this.episodes[this.currentEpisodeIndex];
-    if (!currentAudio) return;
+    if (!currentAudio) {
+      this.showNotification('Ошибка', 'Нет активного эпизода');
+      return;
+    }
     
+    const currentTime = this.audio.currentTime;
+    const formattedTime = this.formatTime(currentTime);
+    
+    // Создаём новую закладку
     const bookmark = {
-      id: `bm_${Date.now()}`,
+      id: `bm_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       episodeId: currentAudio.id,
       episodeTitle: currentAudio.title,
-      time: this.audio.currentTime,
-      formattedTime: this.formatTime(this.audio.currentTime),
-      note: note || `Отметка в ${this.formatTime(this.audio.currentTime)}`,
+      time: currentTime,
+      formattedTime: formattedTime,
+      note: note || prompt('Введите название закладки:', `Отметка ${formattedTime}`) || `Отметка в ${formattedTime}`,
       timestamp: Date.now()
     };
     
+    // Добавляем в массив
     this.bookmarks.push(bookmark);
+    
+    // Сохраняем в localStorage
     this.saveBookmarks();
+    
+    // Обновляем UI
     this.renderBookmarks();
-    this.showNotification('Закладка добавлена', bookmark.formattedTime);
+    
+    // Показываем уведомление
+    this.showNotification('🔖 Закладка добавлена', `${bookmark.note} - ${formattedTime}`);
     this.emit('bookmarkAdded', bookmark);
+    
+    console.log(`Закладка добавлена. Всего закладок: ${this.bookmarks.length}`);
   }
   
   saveBookmarks() {
     try {
       localStorage.setItem('podcast_bookmarks', JSON.stringify(this.bookmarks));
-    } catch(e) {}
+      console.log(`Сохранено ${this.bookmarks.length} закладок`);
+    } catch(e) {
+      console.error('Ошибка сохранения закладок:', e);
+    }
   }
   
   loadBookmarks() {
     try {
       const saved = localStorage.getItem('podcast_bookmarks');
-      return saved ? JSON.parse(saved) : [];
+      if (saved) {
+        this.bookmarks = JSON.parse(saved);
+        console.log(`Загружено ${this.bookmarks.length} закладок`);
+      } else {
+        this.bookmarks = [];
+        console.log('Нет сохранённых закладок');
+      }
     } catch(e) {
-      return [];
+      console.error('Ошибка загрузки закладок:', e);
+      this.bookmarks = [];
     }
   }
   
   removeBookmark(id) {
-    this.bookmarks = this.bookmarks.filter(b => b.id !== id);
-    this.saveBookmarks();
-    this.renderBookmarks();
+    const index = this.bookmarks.findIndex(b => b.id === id);
+    if (index !== -1) {
+      const removed = this.bookmarks.splice(index, 1)[0];
+      this.saveBookmarks();
+      this.renderBookmarks();
+      this.showNotification('🗑️ Закладка удалена', removed.note);
+      this.emit('bookmarkRemoved', removed);
+      console.log(`Закладка удалена. Осталось: ${this.bookmarks.length}`);
+    }
   }
   
   renderBookmarks() {
@@ -525,12 +564,17 @@ class PodcastPlayer {
     if (!container) return;
     
     const currentEpisodeId = this.episodes[this.currentEpisodeIndex]?.id;
+    
+    // Фильтруем закладки для текущего эпизода
     const currentBookmarks = this.bookmarks.filter(b => b.episodeId === currentEpisodeId);
     
     if (currentBookmarks.length === 0) {
-      container.innerHTML = '<div style="color: #999; text-align: center; padding: 20px;">Нет закладок</div>';
+      container.innerHTML = '<div style="color: #999; text-align: center; padding: 20px;">📭 Нет закладок</div>';
       return;
     }
+    
+    // Сортируем по времени
+    currentBookmarks.sort((a, b) => a.time - b.time);
     
     container.innerHTML = currentBookmarks.map(b => `
       <div style="
@@ -538,23 +582,28 @@ class PodcastPlayer {
         margin-bottom: 8px;
         background: #f5f5f5;
         border-radius: 8px;
+        border-left: 3px solid ${this.themeColor};
       ">
         <div style="font-weight: bold; color: ${this.themeColor};">⏱️ ${b.formattedTime}</div>
-        <div style="font-size: 12px; margin: 5px 0;">${this.escapeHtml(b.note)}</div>
-        <div style="display: flex; gap: 5px;">
-          <button class="goto-bookmark" data-time="${b.time}" style="padding: 4px 10px; background: ${this.themeColor}; color: white; border: none; border-radius: 4px; cursor: pointer;">▶ Перейти</button>
-          <button class="delete-bookmark" data-id="${b.id}" style="padding: 4px 10px; background: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer;">🗑️</button>
+        <div style="font-size: 13px; margin: 5px 0; font-weight: 500;">${this.escapeHtml(b.note)}</div>
+        <div style="font-size: 11px; color: #999; margin-bottom: 8px;">${new Date(b.timestamp).toLocaleString()}</div>
+        <div style="display: flex; gap: 8px;">
+          <button class="goto-bookmark" data-time="${b.time}" style="padding: 5px 12px; background: ${this.themeColor}; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 12px;">▶ Перейти</button>
+          <button class="delete-bookmark" data-id="${b.id}" style="padding: 5px 12px; background: #f44336; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 12px;">🗑️ Удалить</button>
         </div>
       </div>
     `).join('');
     
+    // Добавляем обработчики для перехода
     container.querySelectorAll('.goto-bookmark').forEach(btn => {
       btn.addEventListener('click', () => {
         this.seek(parseFloat(btn.dataset.time));
         this.play();
+        this.showNotification('🎯 Переход к закладке', this.formatTime(parseFloat(btn.dataset.time)));
       });
     });
     
+    // Добавляем обработчики для удаления
     container.querySelectorAll('.delete-bookmark').forEach(btn => {
       btn.addEventListener('click', () => {
         this.removeBookmark(btn.dataset.id);
@@ -577,7 +626,7 @@ class PodcastPlayer {
       });
     } else {
       navigator.clipboard.writeText(text);
-      this.showNotification('Ссылка скопирована', text);
+      this.showNotification('📋 Ссылка скопирована', text);
     }
   }
   
@@ -610,7 +659,10 @@ class PodcastPlayer {
   
   showNotification(message, detail = '') {
     const notification = document.createElement('div');
-    notification.textContent = message + (detail ? ` (${detail})` : '');
+    notification.innerHTML = `
+      <strong>${this.escapeHtml(message)}</strong>
+      ${detail ? `<br><small>${this.escapeHtml(detail)}</small>` : ''}
+    `;
     notification.style.cssText = `
       position: fixed;
       bottom: 20px;
@@ -622,6 +674,8 @@ class PodcastPlayer {
       z-index: 10000;
       font-size: 14px;
       animation: slideIn 0.3s ease;
+      max-width: 300px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     `;
     
     document.body.appendChild(notification);
