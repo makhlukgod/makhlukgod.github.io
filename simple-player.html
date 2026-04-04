@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎙️ Подкаст Плеер</title>
+    <style>
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateY(20px); }
+            15% { opacity: 1; transform: translateY(0); }
+            85% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(20px); }
+        }
+        
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: system-ui, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .info {
+            background: white;
+            border-radius: 16px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #666;
+        }
+        
+        #player-container {
+            margin-top: 20px;
+        }
+        
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 20px;
+        }
+        
+        .footer button {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="info">
+        🎧 Прогресс сохраняется автоматически | 🔖 Закладки работают после перезагрузки
+    </div>
+    
+    <div id="player-container"></div>
+    
+    <div class="footer">
+        <button id="reset-data">🗑️ Сбросить все данные</button>
+    </div>
+</div>
+
+<script type="module">
+    import { Player } from './simple-player.js';
+    
+    // ВСТАВЬТЕ ВАШУ RSS ССЫЛКУ
+    const RSS_URL = 'https://cloud.mave.digital/45361';
+    
+    window.player = new Player({
+        container: () => document.getElementById('player-container'),
+        rssUrl: RSS_URL,
+        themeColor: '#764ba2'
+    });
+    
+    document.getElementById('reset-data').onclick = () => {
+        if (confirm('Сбросить весь прогресс и все закладки?')) {
+            localStorage.removeItem('podcast_progress');
+            localStorage.removeItem('podcast_bookmarks');
+            alert('Данные сброшены. Обновите страницу.');
+            location.reload();
+        }
+    };
+</script>
+</body>
+</html>
