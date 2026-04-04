@@ -1,5 +1,5 @@
 // standalone-player.js
-// Полностью автономный подкаст-плеер с сохранением множества закладок
+// Полностью автономный подкаст-плеер с правильной загрузкой закладок
 
 class PodcastPlayer {
   constructor(options) {
@@ -20,14 +20,14 @@ class PodcastPlayer {
     // Состояние
     this.episodes = [];
     this.currentEpisodeIndex = 0;
-    this.bookmarks = []; // Будет загружено из localStorage
+    this.bookmarks = [];
     this.progressData = {};
     this.isPlaying = false;
     this.currentTime = 0;
     this.duration = 0;
-    this.isInitialized = false;
+    this.isRssLoaded = false;
     
-    // Загружаем сохранённые данные
+    // Сначала загружаем сохранённые данные из localStorage
     this.loadBookmarks();
     this.loadProgress();
     
@@ -35,17 +35,18 @@ class PodcastPlayer {
     this.audio = new Audio();
     this.audio.preload = 'metadata';
     
-    // События
-    this.eventListeners = {};
-    
-    // Инициализация
+    // Создаём UI (пустой, без данных)
     this.initUI();
     this.attachAudioEvents();
     
+    // Загружаем RSS
     if (this.rssUrl) {
       this.loadRSSFeed();
     } else if (options.audio) {
       this.setCurrentAudio(options.audio);
+      this.isRssLoaded = true;
+      // Если нет RSS, всё равно показываем закладки
+      this.renderBookmarks();
     }
   }
   
@@ -56,21 +57,18 @@ class PodcastPlayer {
     
     this.container.innerHTML = `
       <div class="podcast-player" style="font-family: system-ui, sans-serif;">
-        <!-- Основной плеер -->
         <div class="player-main" style="background: white; border-radius: 16px; overflow: hidden;">
-          <!-- Обложка и информация -->
           <div class="player-info" style="display: flex; padding: 20px; gap: 15px; background: linear-gradient(135deg, ${this.themeColor}20, white);">
             <div class="player-cover">
-              <img id="player-cover" src="${this.options.audio?.cover || 'https://via.placeholder.com/80?text=🎙️'}" 
+              <img id="player-cover" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23${this.themeColor.replace('#', '')}'/%3E%3Ctext x='50' y='55' font-size='40' text-anchor='middle' fill='white'%3E🎙️%3C/text%3E%3C/svg%3E" 
                    style="width: 80px; height: 80px; border-radius: 12px; object-fit: cover;">
             </div>
             <div class="player-meta" style="flex: 1;">
-              <div id="player-title" style="font-weight: bold; font-size: 16px;">${this.options.audio?.title || 'Нет эпизода'}</div>
+              <div id="player-title" style="font-weight: bold; font-size: 16px;">${this.options.audio?.title || 'Загрузка...'}</div>
               <div id="player-artist" style="font-size: 14px; color: #666;">${this.options.audio?.artist || 'Подкаст'}</div>
             </div>
           </div>
           
-          <!-- Прогресс бар -->
           <div class="player-progress" style="padding: 0 20px;">
             <input type="range" id="progress-bar" value="0" step="0.1" style="width: 100%; margin: 10px 0;">
             <div style="display: flex; justify-content: space-between; font-size: 12px; color: #666;">
@@ -79,14 +77,12 @@ class PodcastPlayer {
             </div>
           </div>
           
-          <!-- Кнопки управления -->
           <div class="player-controls" style="display: flex; justify-content: center; gap: 20px; padding: 15px 20px;">
             <button id="rewind-btn" style="background: none; border: none; font-size: 24px; cursor: pointer;">⏪ 15</button>
             <button id="play-pause-btn" style="background: ${this.themeColor}; border: none; width: 50px; height: 50px; border-radius: 50%; font-size: 24px; cursor: pointer; color: white;">▶</button>
             <button id="forward-btn" style="background: none; border: none; font-size: 24px; cursor: pointer;">30 ⏩</button>
           </div>
           
-          <!-- Дополнительные контролы -->
           <div class="player-extras" style="display: flex; justify-content: center; gap: 15px; padding: 10px 20px; border-top: 1px solid #eee;">
             <select id="speed-select" style="padding: 5px 10px; border-radius: 20px; border: 1px solid #ddd;">
               <option value="0.5">0.5x</option>
@@ -102,16 +98,15 @@ class PodcastPlayer {
           </div>
         </div>
         
-        <!-- Панели с эпизодами и закладками -->
         <div class="player-panels" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
           <div id="episodes-panel" style="background: white; border-radius: 12px; padding: 15px; max-height: 300px; overflow-y: auto;">
             <h4 style="margin-bottom: 10px;">📋 Эпизоды</h4>
-            <div id="episodes-list"></div>
+            <div id="episodes-list"><div style="text-align: center; padding: 20px; color: #999;">Загрузка...</div></div>
           </div>
           ${this.enableBookmarks ? `
           <div id="bookmarks-panel" style="background: white; border-radius: 12px; padding: 15px; max-height: 300px; overflow-y: auto;">
-            <h4 style="margin-bottom: 10px;">📌 Закладки (всего: <span id="bookmarks-count">0</span>)</h4>
-            <div id="bookmarks-list"></div>
+            <h4 style="margin-bottom: 10px;">📌 Закладки (<span id="bookmarks-count">0</span>)</h4>
+            <div id="bookmarks-list"><div style="text-align: center; padding: 20px; color: #999;">Загрузка...</div></div>
           </div>
           ` : ''}
         </div>
@@ -148,7 +143,6 @@ class PodcastPlayer {
       this.elements.donateBtn?.addEventListener('click', () => this.showDonation());
     }
     
-    // Добавляем обработчики
     this.elements.playPauseBtn.addEventListener('click', () => this.togglePlay());
     this.elements.rewindBtn.addEventListener('click', () => this.rewind(15));
     this.elements.forwardBtn.addEventListener('click', () => this.forward(30));
@@ -230,17 +224,30 @@ class PodcastPlayer {
       }
       
       if (this.episodes.length > 0) {
+        this.isRssLoaded = true;
         this.renderEpisodes();
-        // ПОСЛЕ ЗАГРУЗКИ ЭПИЗОДОВ ОБНОВЛЯЕМ ЗАКЛАДКИ
+        
+        // ВАЖНО: после загрузки эпизодов отображаем закладки
         this.renderBookmarks();
+        
         this.emit('rssLoaded', this.episodes);
         this.showNotification(`Загружено ${this.episodes.length} эпизодов`);
+        
+        // Автоматически загружаем первый эпизод
+        if (this.episodes.length > 0) {
+          this.loadEpisode(0);
+        }
       }
       
     } catch (error) {
       console.error('RSS error:', error);
       this.emit('rssError', error);
       this.showNotification('Ошибка загрузки RSS', 'Проверьте ссылку');
+      
+      const episodesList = document.getElementById('episodes-list');
+      if (episodesList) {
+        episodesList.innerHTML = '<div style="text-align: center; padding: 20px; color: #f44336;">❌ Ошибка загрузки RSS</div>';
+      }
     }
   }
   
@@ -311,6 +318,11 @@ class PodcastPlayer {
     const container = document.getElementById('episodes-list');
     if (!container) return;
     
+    if (this.episodes.length === 0) {
+      container.innerHTML = '<div style="text-align: center; padding: 20px; color: #999;">Нет эпизодов</div>';
+      return;
+    }
+    
     container.innerHTML = this.episodes.map((ep, idx) => `
       <div class="episode-item" data-index="${idx}" style="
         padding: 12px;
@@ -339,7 +351,6 @@ class PodcastPlayer {
       </div>
     `).join('');
     
-    // Добавляем обработчики
     container.querySelectorAll('.episode-play-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -371,13 +382,14 @@ class PodcastPlayer {
       cover: episode.cover
     });
     
-    this.renderEpisodes(); // Обновляем активный эпизод
-    this.renderBookmarks(); // ОБНОВЛЯЕМ ЗАКЛАДКИ ДЛЯ НОВОГО ЭПИЗОДА
+    this.renderEpisodes();
+    
+    // ВАЖНО: обновляем закладки при смене эпизода
+    this.renderBookmarks();
     
     this.emit('episodeChange', episode);
     this.play();
     
-    // Восстанавливаем прогресс
     if (this.progressData[episode.id] && this.progressData[episode.id].progress > 0) {
       setTimeout(() => {
         this.seek(this.progressData[episode.id].progress);
@@ -500,14 +512,12 @@ class PodcastPlayer {
     const currentTime = this.audio.currentTime;
     const formattedTime = this.formatTime(currentTime);
     
-    // Диалог для ввода названия закладки
     let bookmarkNote = note;
     if (!bookmarkNote) {
       bookmarkNote = prompt('Введите название закладки:', `Отметка ${formattedTime}`);
-      if (!bookmarkNote) return; // Пользователь отменил
+      if (!bookmarkNote) return;
     }
     
-    // Создаём новую закладку
     const bookmark = {
       id: `bm_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       episodeId: currentAudio.id,
@@ -518,26 +528,20 @@ class PodcastPlayer {
       timestamp: Date.now()
     };
     
-    // Добавляем в массив
     this.bookmarks.push(bookmark);
-    
-    // Сохраняем в localStorage
     this.saveBookmarks();
-    
-    // Обновляем UI
     this.renderBookmarks();
     
-    // Показываем уведомление
     this.showNotification('🔖 Закладка добавлена', `${bookmark.note} - ${formattedTime}`);
     this.emit('bookmarkAdded', bookmark);
     
-    console.log(`📌 Закладка добавлена. Всего закладок: ${this.bookmarks.length}`);
+    console.log(`📌 Закладка добавлена. Всего: ${this.bookmarks.length}`);
   }
   
   saveBookmarks() {
     try {
       localStorage.setItem('podcast_bookmarks', JSON.stringify(this.bookmarks));
-      console.log(`💾 Сохранено ${this.bookmarks.length} закладок в localStorage`);
+      console.log(`💾 Сохранено ${this.bookmarks.length} закладок`);
     } catch(e) {
       console.error('Ошибка сохранения закладок:', e);
     }
@@ -549,10 +553,6 @@ class PodcastPlayer {
       if (saved) {
         this.bookmarks = JSON.parse(saved);
         console.log(`📖 Загружено ${this.bookmarks.length} закладок из localStorage`);
-        // Выводим список загруженных закладок для отладки
-        if (this.bookmarks.length > 0) {
-          console.log('Список загруженных закладок:', this.bookmarks);
-        }
       } else {
         this.bookmarks = [];
         console.log('📭 Нет сохранённых закладок');
@@ -571,7 +571,6 @@ class PodcastPlayer {
       this.renderBookmarks();
       this.showNotification('🗑️ Закладка удалена', removed.note);
       this.emit('bookmarkRemoved', removed);
-      console.log(`Закладка удалена. Осталось: ${this.bookmarks.length}`);
     }
   }
   
@@ -582,24 +581,29 @@ class PodcastPlayer {
       return;
     }
     
-    const currentEpisodeId = this.episodes[this.currentEpisodeIndex]?.id;
-    
-    // Фильтруем закладки для текущего эпизода
-    const currentBookmarks = this.bookmarks.filter(b => b.episodeId === currentEpisodeId);
-    
-    console.log(`📌 Рендеринг закладок: найдено ${currentBookmarks.length} для текущего эпизода (всего в хранилище: ${this.bookmarks.length})`);
-    
     // Обновляем счётчик
     if (this.elements.bookmarksCount) {
       this.elements.bookmarksCount.textContent = this.bookmarks.length;
     }
     
-    if (currentBookmarks.length === 0) {
-      container.innerHTML = '<div style="color: #999; text-align: center; padding: 20px;">📭 Нет закладок для этого эпизода</div>';
+    // Если ещё нет эпизодов, показываем сообщение
+    if (!this.isRssLoaded && this.episodes.length === 0) {
+      container.innerHTML = '<div style="text-align: center; padding: 20px; color: #999;">⏳ Загрузка подкаста...</div>';
       return;
     }
     
-    // Сортируем по времени
+    const currentEpisodeId = this.episodes[this.currentEpisodeIndex]?.id;
+    
+    // Фильтруем закладки для текущего эпизода
+    const currentBookmarks = this.bookmarks.filter(b => b.episodeId === currentEpisodeId);
+    
+    console.log(`📌 Рендеринг: ${currentBookmarks.length} закладок для текущего эпизода (всего: ${this.bookmarks.length})`);
+    
+    if (currentBookmarks.length === 0) {
+      container.innerHTML = '<div style="text-align: center; padding: 20px; color: #999;">📭 Нет закладок для этого эпизода</div>';
+      return;
+    }
+    
     currentBookmarks.sort((a, b) => a.time - b.time);
     
     container.innerHTML = currentBookmarks.map(b => `
@@ -620,16 +624,13 @@ class PodcastPlayer {
       </div>
     `).join('');
     
-    // Добавляем обработчики для перехода
     container.querySelectorAll('.goto-bookmark').forEach(btn => {
       btn.addEventListener('click', () => {
         this.seek(parseFloat(btn.dataset.time));
         this.play();
-        this.showNotification('🎯 Переход к закладке', this.formatTime(parseFloat(btn.dataset.time)));
       });
     });
     
-    // Добавляем обработчики для удаления
     container.querySelectorAll('.delete-bookmark').forEach(btn => {
       btn.addEventListener('click', () => {
         this.removeBookmark(btn.dataset.id);
