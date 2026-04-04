@@ -1,8 +1,8 @@
 {
-  "name": "Подкаст Плеер",
-  "short_name": "Podcast Player",
-  "description": "Удобный плеер для подкастов с сохранением прогресса и закладками",
-  "start_url": "/",
+  "name": "НӘСЫЙХӘТ .tatar",
+  "short_name": "татарча дини дәресләр",
+  "description": "НӘСЫЙХӘТ | татарча дини дәресләр",
+  "start_url": "/podcast1/",
   "display": "standalone",
   "theme_color": "#764ba2",
   "background_color": "#764ba2",
