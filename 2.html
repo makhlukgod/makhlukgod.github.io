@@ -45,6 +45,7 @@
         
         .info-card p {
             color: #666;
+            margin: 5px 0;
         }
         
         .footer {
@@ -79,7 +80,7 @@
         <p>✅ Прогресс прослушивания сохраняется<br>
         ✅ Можно добавлять сколько угодно закладок<br>
         ✅ Все данные хранятся в браузере (localStorage)<br>
-        ✅ Закладки сохраняются после перезагрузки</p>
+        ✅ Закладки сохраняются после перезагрузки страницы</p>
     </div>
     
     <div id="player-container"></div>
@@ -111,8 +112,7 @@
             audio: {
                 title: 'Загрузка подкаста...',
                 artist: 'Подкаст',
-                src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
-                cover: 'https://via.placeholder.com/80?text=🎙️'
+                src: ''
             },
             enableProgressTracking: true,
             enableBookmarks: true,
@@ -138,7 +138,6 @@
     
     createPlayer();
     
-    // Сброс прогресса и закладок
     document.getElementById('reset-progress').addEventListener('click', () => {
         if (confirm('Сбросить весь прогресс прослушивания и все закладки?\n\nЭто действие нельзя отменить.')) {
             localStorage.removeItem('podcast_progress');
@@ -147,15 +146,6 @@
             location.reload();
         }
     });
-    
-    // Для отладки - показываем в консоли что сохранено
-    setTimeout(() => {
-        const savedBookmarks = localStorage.getItem('podcast_bookmarks');
-        if (savedBookmarks) {
-            const count = JSON.parse(savedBookmarks).length;
-            console.log(`📊 В localStorage найдено ${count} сохранённых закладок`);
-        }
-    }, 1000);
 </script>
 </body>
 </html>
