@@ -1,3 +1,6 @@
+// simple-player.js
+// Полностью исправленная версия
+
 class SimplePodcastPlayer {
   constructor(options) {
     this.options = options;
@@ -17,6 +20,10 @@ class SimplePodcastPlayer {
     // Аудио
     this.audio = new Audio();
     this.isPlaying = false;
+    this.isSeeking = false;
+    
+    // Флаг готовности
+    this.isInitialized = false;
     
     // Инициализация
     this.initUI();
@@ -51,7 +58,7 @@ class SimplePodcastPlayer {
         <div style="background: white; border-radius: 16px; overflow: hidden;">
           <div style="display: flex; padding: 20px; gap: 15px; background: linear-gradient(135deg, ${this.themeColor}20, white);">
             <img id="player-cover" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='${this.themeColor}'/%3E%3Ctext x='50' y='55' font-size='40' text-anchor='middle' fill='white'%3E🎙️%3C/text%3E%3C/svg%3E" 
-                 style="width: 60px; height: 60px; border-radius: 12px;">
+                 style="width: 60px; height: 60px; border-radius: 12px; object-fit: cover;">
             <div style="flex: 1;">
               <div id="player-title" style="font-weight: bold;">Загрузка...</div>
               <div id="player-artist" style="font-size: 13px; color: #666;">Подкаст</div>
@@ -99,7 +106,7 @@ class SimplePodcastPlayer {
       </div>
     `;
     
-    // Элементы
+    // Получаем элементы
     this.elements = {
       cover: document.getElementById('player-cover'),
       title: document.getElementById('player-title'),
@@ -117,19 +124,36 @@ class SimplePodcastPlayer {
       bookmarksList: document.getElementById('bookmarks-list')
     };
     
+    // Проверяем, что все элементы найдены
+    console.log('UI элементы загружены:', Object.keys(this.elements).length);
+    
     // Обработчики
-    this.elements.playPause.onclick = () => this.togglePlay();
-    this.elements.rewind15.onclick = () => this.rewind(15);
-    this.elements.forward30.onclick = () => this.forward(30);
-    this.elements.speed.onchange = (e) => this.audio.playbackRate = parseFloat(e.target.value);
-    this.elements.progressBar.oninput = (e) => this.seek(parseFloat(e.target.value));
-    this.elements.bookmarkBtn.onclick = () => this.addBookmark();
+    if (this.elements.playPause) {
+      this.elements.playPause.onclick = () => this.togglePlay();
+    }
+    if (this.elements.rewind15) {
+      this.elements.rewind15.onclick = () => this.rewind(15);
+    }
+    if (this.elements.forward30) {
+      this.elements.forward30.onclick = () => this.forward(30);
+    }
+    if (this.elements.speed) {
+      this.elements.speed.onchange = (e) => this.audio.playbackRate = parseFloat(e.target.value);
+    }
+    if (this.elements.progressBar) {
+      this.elements.progressBar.oninput = (e) => this.seek(parseFloat(e.target.value));
+    }
+    if (this.elements.bookmarkBtn) {
+      this.elements.bookmarkBtn.onclick = () => this.addBookmark();
+    }
+    
+    this.isInitialized = true;
   }
   
   attachEvents() {
     // Обновление прогресс-бара
     this.audio.ontimeupdate = () => {
-      if (this.elements.progressBar && !this.isSeeking) {
+      if (this.elements?.progressBar && !this.isSeeking) {
         this.elements.progressBar.value = this.audio.currentTime;
         this.elements.currentTime.textContent = this.formatTime(this.audio.currentTime);
       }
@@ -137,39 +161,47 @@ class SimplePodcastPlayer {
     
     // Загрузка метаданных
     this.audio.onloadedmetadata = () => {
-      this.elements.progressBar.max = this.audio.duration;
-      this.elements.durationTime.textContent = this.formatTime(this.audio.duration);
+      if (this.elements?.progressBar) {
+        this.elements.progressBar.max = this.audio.duration;
+        this.elements.durationTime.textContent = this.formatTime(this.audio.duration);
+      }
       this.restoreProgress();
     };
     
     // Воспроизведение
     this.audio.onplay = () => {
       this.isPlaying = true;
-      this.elements.playPause.textContent = '⏸';
+      if (this.elements?.playPause) {
+        this.elements.playPause.textContent = '⏸';
+      }
     };
     
     // Пауза
     this.audio.onpause = () => {
       this.isPlaying = false;
-      this.elements.playPause.textContent = '▶';
+      if (this.elements?.playPause) {
+        this.elements.playPause.textContent = '▶';
+      }
       this.saveProgress();
     };
     
     // Завершение
     this.audio.onended = () => {
       this.isPlaying = false;
-      this.elements.playPause.textContent = '▶';
+      if (this.elements?.playPause) {
+        this.elements.playPause.textContent = '▶';
+      }
       this.markCompleted();
     };
     
     // Ошибка
-    this.audio.onerror = () => {
-      console.log('Ошибка загрузки аудио');
+    this.audio.onerror = (e) => {
+      console.log('Ошибка загрузки аудио:', e);
     };
     
     // Сохранение прогресса каждые 5 секунд
     setInterval(() => {
-      if (this.isPlaying && this.audio.currentTime > 0) {
+      if (this.isPlaying && this.audio.currentTime > 0 && this.episodes[this.currentEpisodeIndex]) {
         this.saveProgress();
       }
     }, 5000);
@@ -180,6 +212,7 @@ class SimplePodcastPlayer {
   async loadRSS() {
     try {
       const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(this.rssUrl)}`;
+      console.log('Загрузка RSS:', apiUrl);
       const response = await fetch(apiUrl);
       const data = await response.json();
       
@@ -193,24 +226,45 @@ class SimplePodcastPlayer {
               title: item.title,
               audioUrl: audioUrl,
               cover: item.thumbnail,
-              pubDate: item.pubDate
+              pubDate: item.pubDate,
+              duration: this.parseDuration(item.enclosure?.duration)
             });
           }
         });
         
+        console.log(`Загружено эпизодов: ${this.episodes.length}`);
         this.renderEpisodes();
+        
         if (this.episodes.length > 0) {
           this.loadEpisode(0);
+        }
+      } else {
+        console.error('RSS2JSON ошибка:', data.message);
+        if (this.elements?.episodesList) {
+          this.elements.episodesList.innerHTML = '<div style="color: red;">Ошибка загрузки RSS. Проверьте ссылку.</div>';
         }
       }
     } catch(e) {
       console.error('RSS error:', e);
-      this.elements.episodesList.innerHTML = '<div style="color: red;">Ошибка загрузки RSS</div>';
+      if (this.elements?.episodesList) {
+        this.elements.episodesList.innerHTML = '<div style="color: red;">Ошибка загрузки RSS. Проверьте интернет.</div>';
+      }
     }
   }
   
+  parseDuration(durationStr) {
+    if (!durationStr) return 0;
+    if (typeof durationStr === 'number') return durationStr;
+    if (durationStr.includes(':')) {
+      const parts = durationStr.split(':').map(Number);
+      if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+      if (parts.length === 2) return parts[0] * 60 + parts[1];
+    }
+    return parseInt(durationStr) || 0;
+  }
+  
   renderEpisodes() {
-    if (!this.elements.episodesList) return;
+    if (!this.elements?.episodesList) return;
     
     if (this.episodes.length === 0) {
       this.elements.episodesList.innerHTML = '<div style="color: #999;">Нет эпизодов</div>';
@@ -223,7 +277,7 @@ class SimplePodcastPlayer {
         ? ` ⏺ ${this.formatTime(prog)}` : '';
       
       return `
-        <div onclick="window.player.loadEpisode(${idx})" style="
+        <div onclick="window.player && window.player.loadEpisode(${idx})" style="
           padding: 10px;
           margin-bottom: 8px;
           background: ${idx === this.currentEpisodeIndex ? this.themeColor + '20' : '#f5f5f5'};
@@ -251,14 +305,18 @@ class SimplePodcastPlayer {
     // Останавливаем
     this.audio.pause();
     this.isPlaying = false;
-    this.elements.playPause.textContent = '▶';
+    if (this.elements?.playPause) {
+      this.elements.playPause.textContent = '▶';
+    }
     
     // Меняем эпизод
     this.currentEpisodeIndex = index;
     const episode = this.episodes[index];
     
-    this.elements.title.textContent = episode.title;
-    if (episode.cover) {
+    if (this.elements?.title) {
+      this.elements.title.textContent = episode.title;
+    }
+    if (this.elements?.cover && episode.cover) {
       this.elements.cover.src = episode.cover;
     }
     
@@ -281,7 +339,7 @@ class SimplePodcastPlayer {
     if (currentTime > 0 && currentTime < this.audio.duration - 3) {
       this.progress[episode.id] = currentTime;
       this.saveToStorage('podcast_progress', this.progress);
-      console.log(`Сохранён прогресс: ${episode.title} - ${this.formatTime(currentTime)}`);
+      console.log(`Сохранён прогресс: ${episode.title.substring(0, 30)} - ${this.formatTime(currentTime)}`);
     }
   }
   
@@ -292,7 +350,7 @@ class SimplePodcastPlayer {
     const savedTime = this.progress[episode.id];
     if (savedTime && savedTime > 10 && savedTime < this.audio.duration - 10) {
       this.audio.currentTime = savedTime;
-      console.log(`Восстановлен прогресс: ${episode.title} - ${this.formatTime(savedTime)}`);
+      console.log(`Восстановлен прогресс: ${episode.title.substring(0, 30)} - ${this.formatTime(savedTime)}`);
       this.showNotification(`⏪ Продолжаем с ${this.formatTime(savedTime)}`);
     }
   }
@@ -337,16 +395,21 @@ class SimplePodcastPlayer {
   }
   
   renderBookmarks() {
-    if (!this.elements.bookmarksList) return;
+    if (!this.elements?.bookmarksList) return;
     
     const episode = this.episodes[this.currentEpisodeIndex];
     if (!episode) {
       this.elements.bookmarksList.innerHTML = '<div style="color: #999;">Нет эпизода</div>';
+      if (this.elements?.bookmarksCount) {
+        this.elements.bookmarksCount.textContent = this.bookmarks.length;
+      }
       return;
     }
     
     const episodeBookmarks = this.bookmarks.filter(b => b.episodeId === episode.id);
-    this.elements.bookmarksCount.textContent = this.bookmarks.length;
+    if (this.elements?.bookmarksCount) {
+      this.elements.bookmarksCount.textContent = this.bookmarks.length;
+    }
     
     if (episodeBookmarks.length === 0) {
       this.elements.bookmarksList.innerHTML = '<div style="color: #999; text-align: center; padding: 20px;">Нет закладок</div>';
@@ -366,8 +429,8 @@ class SimplePodcastPlayer {
         <div style="font-weight: bold; color: ${this.themeColor};">⏱️ ${b.formattedTime}</div>
         <div style="font-size: 13px; margin: 5px 0;">${this.escapeHtml(b.note)}</div>
         <div style="display: flex; gap: 8px;">
-          <button onclick="window.player.seekTo(${b.time})" style="padding: 4px 10px; background: ${this.themeColor}; color: white; border: none; border-radius: 4px; cursor: pointer;">▶ Перейти</button>
-          <button onclick="window.player.deleteBookmark(${b.id})" style="padding: 4px 10px; background: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer;">🗑️</button>
+          <button onclick="window.player && window.player.seekTo(${b.time})" style="padding: 4px 10px; background: ${this.themeColor}; color: white; border: none; border-radius: 4px; cursor: pointer;">▶ Перейти</button>
+          <button onclick="window.player && window.player.deleteBookmark(${b.id})" style="padding: 4px 10px; background: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer;">🗑️</button>
         </div>
       </div>
     `).join('');
