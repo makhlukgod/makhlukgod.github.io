@@ -4,10 +4,10 @@ const CACHE_NAME = 'podcast-player-v1';
 
 // Файлы, которые нужно кэшировать при установке
 const FILES_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/simple-player.js',
-  '/manifest.json'
+  '',
+  'index.html',
+  'simple-player.js',
+  'manifest.json'
 ];
 
 // Установка Service Worker — кэшируем основные файлы
