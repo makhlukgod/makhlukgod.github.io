@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>🎙️ Подкаст Плеер</title>
+    
+    <!-- PWA манифест -->
+    <link rel="manifest" href="/manifest.json">
+    
+    <!-- Иконки для iOS (Safari) -->
+    <link rel="apple-touch-icon" href="/icons/icon-152.png">
+    
+    <!-- Цвет темы для браузера -->
+    <meta name="theme-color" content="#764ba2">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <!-- Остальные стили -->
+    <style>
+         @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateY(20px); }
+            15% { opacity: 1; transform: translateY(0); }
+            85% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(20px); }
+        }
+        
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: system-ui, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .info {
+            background: white;
+            border-radius: 16px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #666;
+        }
+        
+        #player-container {
+            margin-top: 20px;
+        }
+        
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 20px;
+        }
+        
+        .footer button {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <!-- ваш HTML -->
+    
+    <script type="module">
+        import { Player } from './simple-player.js';
+        
+        const RSS_URL = 'https://ваш-rss-фид';
+        
+        window.player = new Player({
+            container: () => document.getElementById('player-container'),
+            rssUrl: RSS_URL,
+            themeColor: '#764ba2'
+        });
+        
+        // РЕГИСТРАЦИЯ SERVICE WORKER (ДОБАВИТЬ ЭТУ ФУНКЦИЮ)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('✅ Service Worker зарегистрирован:', registration);
+                    })
+                    .catch(error => {
+                        console.error('❌ Ошибка регистрации Service Worker:', error);
+                    });
+            });
+        }
+        
+        // Кнопка сброса данных
+        document.getElementById('reset-data').onclick = () => {
+            if (confirm('Сбросить весь прогресс и все закладки?')) {
+                localStorage.removeItem('podcast_progress');
+                localStorage.removeItem('podcast_bookmarks');
+                alert('Данные сброшены. Обновите страницу.');
+                location.reload();
+            }
+        };
+    </script>
+</body>
+</html>
